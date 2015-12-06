@@ -98,6 +98,7 @@
       (houses (ppcre:regex-replace-all "(.)." data "\\1"))
       (houses (ppcre:regex-replace-all ".(.)" data "\\1")))))
 
+
 ;;;; Day 4
 (defun advent-4-data ()
   "ckczppom")
@@ -125,7 +126,7 @@
   (mine data 6))
 
 
-;;;; Day 4
+;;;; Day 5
 (defun advent-5-data ()
   (-> "data/5"
       beef:slurp
@@ -173,5 +174,71 @@
 (defun advent-5-2 (data)
   (count-if #'is-nice-2 data))
 
-#+comment (advent-4-1 "abcdef")
-#+comment (advent-5-2 (advent-5-data))
+
+;;;; Day 6
+(defun advent-6-data ()
+  (beef:slurp-lines "data/6" :ignore-trailing-newline t))
+
+(defmacro loop-array (arr name &rest body)
+  (let ((i (gensym "index")))
+    `(loop :for ,i :below (array-total-size ,arr)
+           :for ,name = (row-major-aref ,arr ,i)
+           ,@body)))
+
+(defun parse-indexes (s)
+  (->> s
+       (split-sequence #\,)
+       (mapcar #'parse-integer)))
+
+(defun flip (b)
+  (if (zerop b) 1 0))
+
+(defun parse-line (line)
+  (let ((parts (split-sequence #\space line)))
+    (list (parse-indexes (beef:index parts -3))
+          (parse-indexes (beef:index parts -1))
+          (cond
+            ((equal (car parts) "toggle") :toggle)
+            ((equal (cadr parts) "on") :on)
+            ((equal (cadr parts) "off") :off)
+            (t (error "Unknown operation!"))))))
+
+(defmacro loop-square (r c from-row from-col to-row to-col &rest body)
+  `(loop :for ,r :from ,from-row :to ,to-row
+         :do (loop :for ,c :from ,from-col :to ,to-col
+                   ,@body)))
+
+(defun advent-6-1 (data)
+  (let ((lights (make-array '(1000 1000) :element-type 'bit)))
+    (loop
+      :for line :in data
+      :for ((from-row from-col) (to-row to-col) operation) = (parse-line line)
+      :do (loop-square
+            r c from-row from-col to-row to-col
+            :do (setf (bit lights r c)
+                      (case operation
+                        (:toggle (flip (bit lights r c)))
+                        (:on 1)
+                        (:off 0)
+                        (t 0)))))
+    (loop-array lights b
+                :sum b)))
+
+(defun advent-6-2 (data)
+  (let ((lights (make-array '(1000 1000) :element-type 'integer)))
+    (loop
+      :for line :in data
+      :for ((from-row from-col) (to-row to-col) operation) = (parse-line line)
+      :do (loop-square
+            r c from-row from-col to-row to-col
+            :do (case operation
+                  (:toggle (incf (aref lights r c) 2))
+                  (:on (incf (aref lights r c)))
+                  (:off (when (not (zerop (aref lights r c)))
+                          (decf (aref lights r c)))))))
+    (loop-array lights b
+                :sum b)))
+
+;;;; Scratch
+#+comment (advent-6-1 '("turn on 0,0 through 2,2"))
+#+comment (advent-6-2 (advent-6-data))
