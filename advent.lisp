@@ -5,11 +5,14 @@
 (ql:quickload "fset")
 (ql:quickload "cl-ppcre")
 (ql:quickload "ironclad")
+(ql:quickload "smug")
+(ql:quickload "bit-smasher")
 
 (defpackage #:advent
   (:use #:cl)
   (:use #:cl-arrows)
-  (:use #:split-sequence))
+  (:use #:split-sequence)
+  (:use #:smug))
 
 (in-package #:advent)
 
@@ -239,6 +242,127 @@
     (loop-array lights b
                 :sum b)))
 
+
+;;;; Day 7
+(defun advent-7-data ()
+  (beef:slurp-lines "data/7" :ignore-trailing-newline t))
+
+(defun advent-7-2-data ()
+  (beef:slurp-lines "data/7-2" :ignore-trailing-newline t))
+
+(defun int->bits (i)
+  (bitsmash:bits<- (format nil "~4,'0X" i)))
+
+(defun bit-lshift (bit-array distance)
+  (replace (make-array (length bit-array) :element-type 'bit)
+           bit-array
+           :start1 0
+           :start2 (bitsmash:int<- distance)))
+
+(defun bit-rshift (bit-array distance)
+  (let ((width (length bit-array))
+        (distance (bitsmash:int<- distance)))
+    (replace (make-array width :element-type 'bit)
+             bit-array
+             :start1 distance
+             :end2 (- width distance))))
+
+(defun .zero-or-more (parser)
+  (.plus (.let* ((x parser)
+                 (xs (.zero-or-more parser)))
+           (.identity (cons x xs)))
+         (.identity ())))
+
+(defun .one-or-more (parser)
+  (.let* ((x parser)
+          (y (.zero-or-more parser)))
+    (.identity (cons x y))))
+
+(defun parse-7 (line)
+  (labels ((.whitespace ()
+             (.first (.one-or-more (.is 'member '(#\space #\tab)))))
+           (.arrow ()
+             (.first (.string= "->")))
+           (.number ()
+             (.let* ((digits (.first (.one-or-more (.is 'digit-char-p)))))
+                    (.identity (parse-integer (concatenate 'string digits)))))
+           (.wire ()
+             (.let* ((chars (.first (.one-or-more (.is 'lower-case-p)))))
+                    (.identity (concatenate 'string chars))))
+           (.source ()
+             (.or (.wire) (.number)))
+           (.string-choice (strs)
+             (if (not strs)
+               (.fail)
+               (.or (.string= (car strs))
+                    (.string-choice (cdr strs)))))
+           (.dest ()
+             (.progn (.whitespace) (.arrow) (.whitespace)
+                     (.wire)))
+           (.constant-source ()
+             (.let* ((val (.source)))
+                    (.identity (list #'identity (list val)))))
+           (.binary-op ()
+             (let ((ops '(("AND" . bit-and)
+                          ("OR" . bit-ior)
+                          ("LSHIFT" . bit-lshift)
+                          ("RSHIFT" . bit-rshift))))
+               (.let* ((name (.string-choice (mapcar #'car ops))))
+                      (.identity (cdr (assoc name ops :test #'equal))))))
+           (.binary-source ()
+             (.let* ((left (.source))
+                     (_ (.whitespace))
+                     (op (.binary-op))
+                     (_ (.whitespace))
+                     (right (.source)))
+                    (.identity (list op (list left right)))))
+           (.unary-op ()
+             (.let* ((_ (.string= "NOT")))
+                    (.identity #'bit-not)))
+           (.unary-source ()
+             (.let* ((op (.unary-op))
+                     (_ (.whitespace))
+                     (source (.source)))
+                    (.identity (list op (list source)))))
+           (.instruction ()
+             (.let* ((source (.or (.binary-source)
+                                  (.unary-source)
+                                  (.constant-source)))
+                     (dest (.dest)))
+                    (.identity (concatenate 'list source (list dest))))))
+    (parse (.instruction) line)))
+
+(defun advent-7-1 (data)
+  (let ((circuit (make-hash-table :test #'equal))
+        (commands (mapcar #'parse-7 data)))
+    (labels ((retrieve (source)
+               (cond
+                 ((stringp source) (gethash source circuit))
+                 ((integerp source) (int->bits source))
+                 (t (error "what?"))))
+             (ready (args)
+               (every #'identity args))
+             (perform (fn args dest)
+               (setf (gethash dest circuit)
+                     (apply fn args)))
+             (try-command (command)
+               "If the command is ready to go, run it and return nil.  Otherwise,
+                return the command itself."
+               (destructuring-bind (fn args dest) command
+                 (let ((vals (mapcar #'retrieve args)))
+                   (if (ready vals)
+                     (progn
+                       (perform fn vals dest)
+                       nil)
+                     command)))))
+      (loop :while commands
+            :do (setf commands
+                  (loop :for command :in commands
+                        :when (try-command command)
+                        :collect :it)))
+      (bitsmash:bits->int (gethash "a" circuit)))))
+
+
 ;;;; Scratch
-#+comment (advent-6-1 '("turn on 0,0 through 2,2"))
-#+comment (advent-6-2 (advent-6-data))
+#+comment (advent-7-1 '("55 -> b" "b -> a"))
+#+comment (advent-7-1 (advent-7-2-data))
