@@ -363,6 +363,77 @@
       (bitsmash:bits->int (gethash "a" circuit)))))
 
 
+;;;; Day 8
+(defun advent-8-data ()
+  (beef:slurp-lines "data/8" :ignore-trailing-newline t))
+
+
+(defconstant +backslash+ #\\ )
+(defconstant +quote+ #\" )
+
+(defun parse-8 (line)
+  (labels ((.hex-digit ()
+             (.or
+               (.is #'digit-char-p)
+               (.is #'member '(#\a #\b #\c #\d #\e #\f))))
+           (.hex-escape ()
+             (.let* ((_ (.char= #\x))
+                     (a (.hex-digit))
+                     (b (.hex-digit)))
+                    (.identity
+                      (->> (format nil "~A~A" a b)
+                           bitsmash:hex->int
+                           code-char))))
+           (.escaped-char ()
+             (.progn
+               (.char= +backslash+)
+               (.or (.char= +backslash+)
+                    (.char= +quote+)
+                    (.hex-escape))))
+           (.normal-char ()
+             (.is-not 'member (list +backslash+ +quote+)))
+           (.string-char ()
+             (.or (.normal-char)
+                  (.escaped-char)))
+           (.full-string ()
+             (.prog2
+               (.char= +quote+)
+               (.first (.zero-or-more (.string-char)))
+               (.char= +quote+))))
+    (parse (.full-string) line)))
+
+(defun .wrap (fn parser)
+  (.let* ((v parser))
+         (.identity (funcall fn v))))
+
+(defun parse-8-2 (line)
+  (labels ((.special-char ()
+             (.let* ((ch (.or (.char= +backslash+)
+                              (.char= +quote+))))
+                    (.identity (list +backslash+ ch))))
+           (.normal-char ()
+             (.wrap #'list
+                    (.is-not 'member (list +backslash+ +quote+))))
+           (.string-char ()
+             (.or (.normal-char)
+                  (.special-char)))
+           (.full-string ()
+             (.let* ((chars (.zero-or-more (.string-char))))
+                    (.identity (apply #'concatenate 'list chars)))))
+    (parse (.full-string) line)))
+
+(defun advent-8-1 (data)
+  (loop :for line :in data
+        :for chars = (parse-8 line)
+        :sum (- (length line)
+                (length chars))))
+
+(defun advent-8-2 (data)
+  (loop :for line :in data
+        :for chars = (parse-8-2 line)
+        :sum (- (length chars)
+                (length line))))
+
 ;;;; Scratch
-#+comment (advent-7-1 '("55 -> b" "b -> a"))
-#+comment (advent-7-1 (advent-7-2-data))
+#+comment (advent-8-2 '("\"dogs\""))
+#+comment (advent-8-2 (advent-8-data))
