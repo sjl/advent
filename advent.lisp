@@ -420,7 +420,9 @@
            (.full-string ()
              (.let* ((chars (.zero-or-more (.string-char))))
                     (.identity (apply #'concatenate 'list chars)))))
-    (parse (.full-string) line)))
+    (append (list +quote+)
+            (parse (.full-string) line)
+            (list +quote+))))
 
 (defun advent-8-1 (data)
   (loop :for line :in data
