@@ -7,6 +7,7 @@
 (ql:quickload "ironclad")
 (ql:quickload "smug")
 (ql:quickload "bit-smasher")
+(ql:quickload "optima")
 
 (defpackage #:advent
   (:use #:cl)
@@ -436,6 +437,65 @@
         :sum (- (length chars)
                 (length line))))
 
+
+;;;; Day 9
+(defun advent-9-data ()
+  (beef:slurp-lines "data/9" :ignore-trailing-newline t))
+
+; Thanks Norvig
+; http://norvig.com/paip/gps.lisp
+(defun permutations (bag)
+  "Return a list of all the permutations of the input."
+  ;; If the input is nil, there is only one permutation:
+  ;; nil itself
+  (if (null bag)
+      '(())
+      ;; Otherwise, take an element, e, out of the bag.
+      ;; Generate all permutations of the remaining elements,
+      ;; And add e to the front of each of these.
+      ;; Do this for all possible e to generate all permutations.
+      (mapcan #'(lambda (e)
+                  (mapcar #'(lambda (p) (cons e p))
+                          (permutations
+                            (remove e bag :count 1 :test #'eq))))
+              bag)))
+
+(defun advent-9 (data)
+  (let ((distances (make-hash-table :test #'equal)))
+    (loop :for line :in data
+          :for (a to b _ dist) = (split-sequence #\space line)
+          :for distance = (parse-integer dist)
+          :do (progn
+                (setf (gethash (cons a b) distances) distance)
+                (setf (gethash (cons b a) distances) distance)))
+    (labels ((score-route (route)
+               (optima:match route
+                 ((list _) 0)
+                 ((list* a b _) (+ (gethash (cons a b) distances)
+                                   (score-route (cdr route))))))
+             (dedupe (l)
+               (remove-duplicates l :test #'equal)))
+      (loop :for route :in (->> distances
+                             beef:hash-keys
+                             (mapcar #'car)
+                             dedupe
+                             permutations)
+            :for score = (score-route route)
+            :minimizing score :into min-dist
+            :maximizing score :into max-dist
+            :finally (return (cons min-dist max-dist))))))
+
+
+
+(defmethod print-object ((object hash-table) stream)
+  (format stream "#HASH{~%~{~{    (~s : ~s)~}~%~}}"
+          (loop for key being the hash-keys of object
+                using (hash-value value)
+                collect (list key value))))
+
+
+
+
 ;;;; Scratch
 #+comment (advent-8-2 '("\"dogs\""))
-#+comment (advent-8-2 (advent-8-data))
+#+comment (advent-9 (advent-9-data))
