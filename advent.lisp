@@ -531,9 +531,101 @@
   (length (iterate 50 #'look-and-say (las-to-list data))))
 
 
+;;;; Day 11
+(defun advent-11-data ()
+  "vzbxkghb")
+
+
+(defparameter base 26)
+(defparameter ascii-alpha-start (char-code #\a))
+(defun num-to-char (n)
+  (code-char (+ n ascii-alpha-start)))
+
+(defun char-to-num (ch)
+  (- (char-code ch) ascii-alpha-start))
+
+
+(defmacro loop-window (seq width binding-form &rest body)
+  (let ((i (gensym "IGNORE"))
+        (s (gensym "SEQ"))
+        (n (gensym "WIDTH"))
+        (tail (gensym "TAIL")))
+    `(let ((,s ,seq)
+           (,n ,width))
+       (loop :for ,i :upto (- (length ,s) ,n)
+             :for ,tail :on ,s
+             :for ,binding-form = (subseq ,tail 0 ,n)
+             ,@body))))
+
+
+(defun is-straight-3 (l)
+  (destructuring-bind (a b c) l
+    (and (= 1 (- b a))
+         (= 1 (- c b)))))
+
+(defun has-straight-3 (nums)
+  (loop-window nums 3 triplet
+               :thereis (is-straight-3 triplet)))
+
+
+(defparameter bad-chars
+  (mapcar #'char-to-num '(#\i #\l #\o)))
+
+(defun no-bad (nums)
+  (loop :for bad :in bad-chars
+        :never (find bad nums)))
+
+
+(defun two-pairs (nums)
+  (-> nums
+      (loop-window 2 (a b)
+                   :when (= a b)
+                   :collect a)
+      remove-duplicates
+      length
+      (>= 2)))
+
+
+(defun valid (nums)
+  (and (has-straight-3 nums)
+       (no-bad nums)
+       (two-pairs nums)
+       nums))
+
+
+(defun incr-nums (nums)
+  (labels ((inc-mod (x)
+             (mod (1+ x) base))
+           (inc (nums)
+             (if (not nums)
+               '(1)
+               (let ((head (inc-mod (car nums))))
+                 (if (zerop head)
+                   (cons head (inc (cdr nums)))
+                   (cons head (cdr nums)))))))
+    (reverse (inc (reverse nums)))))
+
+
+(defun advent-11-1 (data)
+  (flet ((chars-to-string (chs)
+           (apply #'concatenate 'string (mapcar #'string chs)))
+         (nums-to-chars (nums)
+           (mapcar #'num-to-char nums))
+         (string-to-nums (str)
+           (loop :for ch :across str
+                 :collect (char-to-num ch))))
+    (-> (loop :for pw = (incr-nums (string-to-nums data))
+              :then (incr-nums pw)
+              :thereis (valid pw))
+        nums-to-chars
+        chars-to-string)))
+
+
+
 
 
 ;;;; Scratch
 #+comment (advent-8-2 '("\"dogs\""))
-#+comment (advent-10-1 (advent-10-data))
+#+comment (advent-11-1 (advent-11-1 (advent-11-data)))
+#+comment (advent-11-1 "abcdefgh")
 #+comment (advent-10-2 (advent-10-data))
