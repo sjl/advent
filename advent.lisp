@@ -486,7 +486,6 @@
             :finally (return (cons min-dist max-dist))))))
 
 
-
 (defmethod print-object ((object hash-table) stream)
   (format stream "#HASH{~%~{~{    (~s : ~s)~}~%~}}"
           (loop for key being the hash-keys of object
@@ -494,8 +493,47 @@
                 collect (list key value))))
 
 
+;;;; Day 10
+(defun advent-10-data ()
+  "1321131112")
+
+(defun look-and-say (seq)
+  (let ((runs (list))
+        (len 1)
+        (current -1))
+    (flet ((mark-run ()
+             (setf runs (cons current (cons len runs)))))
+    (loop :for n :in seq
+          :do (if (= current n)
+                (incf len)
+                (progn
+                  (when (not (= -1 current))
+                    (mark-run))
+                  (setf len 1)
+                  (setf current n)))
+          :finally (mark-run))
+    (reverse runs))))
+
+(defun iterate (n f data)
+  (declare (optimize speed (debug 0)))
+  (dotimes (_ n)
+    (setf data (funcall f data)))
+  data)
+
+(defun las-to-list (s)
+  (loop :for digit :across s
+        :collect (-> digit string parse-integer)))
+
+(defun advent-10-1 (data)
+  (length (iterate 40 #'look-and-say (las-to-list data))))
+
+(defun advent-10-2 (data)
+  (length (iterate 50 #'look-and-say (las-to-list data))))
+
+
 
 
 ;;;; Scratch
 #+comment (advent-8-2 '("\"dogs\""))
-#+comment (advent-9 (advent-9-data))
+#+comment (advent-10-1 (advent-10-data))
+#+comment (advent-10-2 (advent-10-data))
