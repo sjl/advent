@@ -621,11 +621,103 @@
         chars-to-string)))
 
 
+;;;; Day 11
+(defun advent-12-data ()
+  (beef:trim-whitespace (beef:slurp "data/12")))
+
+
+(defun parse-json (s)
+  (labels ((.number ()
+             (.let* ((negation (.optional (.char= #\-)))
+                     (digits (.first (.one-or-more (.is 'digit-char-p)))))
+               (.identity (let ((i (parse-integer (concatenate 'string digits)))
+                                (c (if negation -1 1)))
+                            (* i c)))))
+           (.string-char ()
+             (.wrap #'list (.is-not 'member (list +quote+))))
+           (.string-guts ()
+             (.let* ((chars (.zero-or-more (.string-char))))
+               (.identity (apply #'concatenate 'string chars)))) 
+           (.string ()
+             (.prog2
+               (.char= +quote+)
+               (.string-guts)
+               (.char= +quote+)))
+           (.map-pair ()
+             (.let* ((key (.string))
+                     (_ (.char= #\:))
+                     (value (.expression)))
+               (.identity (cons key value))))
+           (.map-guts ()
+             (.or
+               (.let* ((p (.map-pair))
+                       (_ (.char= #\,))
+                       (remaining (.map-guts)))
+                 (.identity (cons p remaining)))
+               (.wrap #'list (.map-pair))
+               (.identity '())))
+           (.map ()
+             (.prog2
+               (.char= #\{)
+               (.wrap (lambda (v) (cons :map v))
+                      (.map-guts))
+               (.char= #\})))
+           (.array-guts ()
+             (.or
+               (.let* ((item (.expression))
+                       (_ (.char= #\,))
+                       (remaining (.array-guts)))
+                 (.identity (cons item remaining)))
+               (.wrap #'list (.expression))
+               (.identity '())))
+           (.array ()
+             (.prog2
+               (.char= #\[)
+               (.wrap (lambda (v) (cons :array v))
+                      (.array-guts))
+               (.char= #\])))
+           (.expression ()
+             (.or (.array)
+                  (.map)
+                  (.string)
+                  (.number))))
+    (parse (.expression) s)))
+
+(defun walk-sum (v)
+  (cond
+    ((not v) 0)
+    ((typep v 'integer) v)
+    ((typep v 'string) 0)
+    ((eql (car v) :array) (loop :for value in (cdr v)
+                                :sum (walk-sum value)))
+    ((eql (car v) :map) (loop :for (key . value) :in (cdr v)
+                              :sum (walk-sum value)))
+    (:else (error (format nil "wat? ~a" v)))))
+
+(defun walk-sum-2 (v)
+  (cond
+    ((not v) 0)
+    ((typep v 'integer) v)
+    ((typep v 'string) 0)
+    ((eql (car v) :array) (loop :for value in (cdr v)
+                                :sum (walk-sum-2 value)))
+    ((eql (car v) :map)
+     (if (member "red" (mapcar #'cdr (cdr v))
+                 :test #'equal)
+       0
+       (loop :for (key . value) :in (cdr v)
+             :sum (walk-sum-2 value))))
+    (:else (error (format nil "wat? ~a" v)))))
+
+
+(defun advent-12-1 (data)
+  (walk-sum (parse-json data)))
+
+(defun advent-12-2 (data)
+  (walk-sum-2 (parse-json data)))
+
 
 
 
 ;;;; Scratch
-#+comment (advent-8-2 '("\"dogs\""))
-#+comment (advent-11-1 (advent-11-1 (advent-11-data)))
-#+comment (advent-11-1 "abcdefgh")
-#+comment (advent-10-2 (advent-10-data))
+#+comment (advent-12-2 (advent-12-data))
