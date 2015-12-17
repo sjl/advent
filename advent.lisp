@@ -1,5 +1,6 @@
 ; https://bitbucket.org/sjl/beef
 (ql:quickload "beef")
+(ql:quickload "alexandria")
 (ql:quickload "split-sequence")
 (ql:quickload "cl-arrows")
 (ql:quickload "fset")
@@ -770,5 +771,66 @@
           :maximize (rate-seating vals arrangement))))
 
 
+;;;; Day 14
+(defun advent-14-data ()
+  (beef:slurp-lines "data/14" :ignore-trailing-newline t))
+
+
+(defun tick (deer)
+  (destructuring-bind
+    (name speed sprint-period rest-period traveled currently remaining)
+    deer
+    (let ((remaining (1- remaining)))
+      (if (equal currently :resting)
+        (list name speed sprint-period rest-period
+              traveled
+              (if (zerop remaining) :sprinting :resting)
+              (if (zerop remaining) sprint-period remaining))
+        (list name speed sprint-period rest-period
+              (+ traveled speed)
+              (if (zerop remaining) :resting :sprinting)
+              (if (zerop remaining) rest-period remaining))))))
+
+(defun parse-deers (lines)
+  (loop :for line :in lines
+        :collect (ppcre:register-groups-bind
+                   (name speed sprint-period rest-period)
+                   ("(\\w+) can fly (\\d+) km/s for (\\d+) .* (\\d+) seconds."
+                    line)
+                   (list name
+                         (parse-integer speed)
+                         (parse-integer sprint-period)
+                         (parse-integer rest-period)
+                         0
+                         :sprinting
+                         (parse-integer sprint-period)))))
+
+(defun find-leaders (deers)
+  (let ((dist (reduce #'max deers :key (beef:partial #'nth 4))))
+    (remove-if-not (lambda (deer)
+                     (= dist (nth 4 deer)))
+                   deers)))
+
+
+(defun advent-14-1 (data n)
+  (apply #'max
+         (loop :for i :upto n
+               :for deers := (parse-deers data) :then (mapcar #'tick deers)
+               :finally (return (mapcar (beef:partial #'nth 4) deers)))))
+
+(defun advent-14-2 (data n)
+  (let ((scores (make-hash-table :test #'equal))
+        (deers (parse-deers data)))
+    (loop :for (name) :in deers
+          :do (setf (gethash name scores) 0))
+    (loop :for i :upto n
+          :do (setf deers (mapcar #'tick deers))
+          :do (loop :for (name) :in (find-leaders deers)
+                    :do (incf (gethash name scores))))
+    (apply #'max (beef:hash-values scores))))
+
+
+
+
 ;;;; Scratch
-#+comment (advent-13-2 (advent-13-data))
+#+comment (advent-14-2 (advent-14-data) 2503)
