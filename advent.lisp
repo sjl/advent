@@ -17,6 +17,7 @@
 
 (in-package #:advent)
 
+(declaim (optimize (debug 3)))
 
 ;;;; Day 1
 (defun instruction-to-num (ch)
@@ -621,7 +622,7 @@
         chars-to-string)))
 
 
-;;;; Day 11
+;;;; Day 12
 (defun advent-12-data ()
   (beef:trim-whitespace (beef:slurp "data/12")))
 
@@ -637,7 +638,7 @@
              (.wrap #'list (.is-not 'member (list +quote+))))
            (.string-guts ()
              (.let* ((chars (.zero-or-more (.string-char))))
-               (.identity (apply #'concatenate 'string chars)))) 
+               (.identity (apply #'concatenate 'string chars))))
            (.string ()
              (.prog2
                (.char= +quote+)
@@ -717,7 +718,57 @@
   (walk-sum-2 (parse-json data)))
 
 
+;;;; Day 13
+(defun advent-13-data ()
+  (beef:slurp-lines "data/13" :ignore-trailing-newline t))
+
+
+(defvar *wat* nil)
+
+(defmacro map-when (test fn val &rest args)
+  (let ((v (gensym "VALUE")))
+    `(let ((,v ,val))
+       (if ,test
+         (apply ,fn ,v ,args)
+         ,v))))
+
+(defun split-lines-13 (lines)
+  (loop :for line :in lines
+        :collect (ppcre:register-groups-bind
+                   (a dir amount b)
+                   ("(\\w+) would (gain|lose) (\\d+) .*? next to (\\w+)."
+                    line)
+                   (list a b (map-when (equal "lose" dir)
+                                       #'-
+                                       (parse-integer amount))))))
+
+(defun rate-seating (vals arrangement)
+  (labels ((find-val (a b)
+             (or (gethash (cons a b) vals) 0))
+           (rate-one-direction (arr)
+             (+ (loop-window arr 2 (a b) :sum (find-val a b))
+                (find-val (car (last arr)) (car arr)))))
+    (+ (rate-one-direction arrangement)
+       (rate-one-direction (reverse arrangement)))))
+
+(defun advent-13-1 (data)
+  (let* ((tups (split-lines-13 data))
+         (attendees (remove-duplicates (mapcar #'car tups) :test #'equal))
+         (vals (make-hash-table :test #'equal)))
+    (loop :for (a b val) :in tups
+          :do (setf (gethash (cons a b) vals) val))
+    (loop :for arrangement :in (permutations attendees)
+          :maximize (rate-seating vals arrangement))))
+
+(defun advent-13-2 (data)
+  (let* ((tups (split-lines-13 data))
+         (attendees (cons "Self" (remove-duplicates (mapcar #'car tups) :test #'equal)))
+         (vals (make-hash-table :test #'equal)))
+    (loop :for (a b val) :in tups
+          :do (setf (gethash (cons a b) vals) val))
+    (loop :for arrangement :in (permutations attendees)
+          :maximize (rate-seating vals arrangement))))
 
 
 ;;;; Scratch
-#+comment (advent-12-2 (advent-12-data))
+#+comment (advent-13-2 (advent-13-data))
