@@ -831,6 +831,68 @@
 
 
 
+;;;; Day 15
+(defun advent-15-data ()
+  (beef:slurp-lines "data/15" :ignore-trailing-newline t))
+
+(defun split-ingredients (line)
+  (ppcre:register-groups-bind
+    (name (#'parse-integer capacity durability flavor texture calories))
+    ("(\\w+): capacity (-?\\d+), durability (-?\\d+), flavor (-?\\d+), texture (-?\\d+), calories (-?\\d+)"
+     line)
+    (list name capacity durability flavor texture calories)))
+
+(defun calc-contribution (ingr amount)
+  (cons (car ingr)
+        (mapcar (beef:partial #'* amount)
+                (cdr ingr))))
+
+(defun calc-contributions (ingrs alist)
+  (mapcar #'calc-contribution ingrs alist))
+
+(defun sum-totals (ingrs)
+  (->> ingrs
+       (mapcar #'cdr)
+       (apply #'mapcar #'+)
+       (mapcar (lambda (x) (if (< x 0) 0 x)))))
+
+(defun advent-15-1 (data)
+  (let ((ingredients (mapcar #'split-ingredients data))
+        (limit 100)
+        (amounts (list)))
+    ; fuckin lol
+    (loop :for a :upto limit :do
+          (loop :for b :upto (- limit a) :do
+                (loop :for c :upto (- limit a b) :do
+                      (setf amounts
+                            (cons (list a b c (- limit a b c))
+                                  amounts)))))
+    (loop :for alist :in amounts
+          :maximize (->> alist
+                         (calc-contributions ingredients)
+                         sum-totals
+                         butlast
+                         (apply #'*)))))
+
+(defun advent-15-2 (data)
+  (let ((ingredients (mapcar #'split-ingredients data))
+        (limit 100)
+        (amounts (list)))
+    ; fuckin lol
+    (loop :for a :upto limit :do
+          (loop :for b :upto (- limit a) :do
+                (loop :for c :upto (- limit a b) :do
+                      (setf amounts
+                            (cons (list a b c (- limit a b c))
+                                  amounts)))))
+    (loop :for alist :in amounts
+          :for val = (->> alist
+                          (calc-contributions ingredients)
+                          sum-totals)
+          :when (= (car (last val)) 500)
+          :maximize (apply #'* (butlast val)))))
+
 
 ;;;; Scratch
-#+comment (advent-14-2 (advent-14-data) 2503)
+#+comment
+(advent-15-2 (advent-15-data))
