@@ -2,6 +2,11 @@
 
 ;;;; Utils --------------------------------------------------------------------
 (defun read-file-of-digits (path)
+  "Read all the ASCII digits in `path` into a list of integers.
+
+  Any character in the file that's not an ASCII digit will be silently ignored.
+
+  "
   (-<> path
     read-file-into-string
     (map 'list #'digit-char-p <>)
