@@ -18,8 +18,8 @@
   (iterate
     (with data = (coerce (read-file-of-digits "data/2017/01-1") 'vector))
     (with length = (length data))
-    (with offset = (truncate length 2))
-    (for x :in-vector data :with-index i)
-    (for y = (aref data (mod (+ i offset) length)))
+    (for x :in-vector data)
+    (for iy :modulo length :from (truncate length 2))
+    (for y = (aref data iy))
     (when (= x y)
       (sum x))))
