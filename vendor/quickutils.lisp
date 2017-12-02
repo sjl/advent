@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:CURRY :EXTREMUM :RCURRY :READ-FILE-INTO-STRING) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:CURRY :RCURRY :READ-FILE-INTO-STRING) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -14,7 +14,7 @@
 
 (when (boundp '*utilities*)
   (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
-                                         :CURRY :EXTREMUM :RCURRY :ONCE-ONLY
+                                         :CURRY :RCURRY :ONCE-ONLY
                                          :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
                                          :READ-FILE-INTO-STRING))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -59,50 +59,6 @@ it is called with to `function`."
          (declare (optimize (speed 3) (safety 1) (debug 1)))
          (lambda (&rest more)
            (apply ,fun ,@curries more)))))
-  
-
-  (defun extremum (sequence predicate &key key (start 0) end)
-    "Returns the element of `sequence` that would appear first if the subsequence
-bounded by `start` and `end` was sorted using `predicate` and `key`.
-
-`extremum` determines the relationship between two elements of `sequence` by using
-the `predicate` function. `predicate` should return true if and only if the first
-argument is strictly less than the second one (in some appropriate sense). Two
-arguments `x` and `y` are considered to be equal if `(funcall predicate x y)`
-and `(funcall predicate y x)` are both false.
-
-The arguments to the `predicate` function are computed from elements of `sequence`
-using the `key` function, if supplied. If `key` is not supplied or is `nil`, the
-sequence element itself is used.
-
-If `sequence` is empty, `nil` is returned."
-    (let* ((pred-fun (ensure-function predicate))
-           (key-fun (unless (or (not key) (eq key 'identity) (eq key #'identity))
-                      (ensure-function key)))
-           (real-end (or end (length sequence))))
-      (cond ((> real-end start)
-             (if key-fun
-                 (flet ((reduce-keys (a b)
-                          (if (funcall pred-fun
-                                       (funcall key-fun a)
-                                       (funcall key-fun b))
-                              a
-                              b)))
-                   (declare (dynamic-extent #'reduce-keys))
-                   (reduce #'reduce-keys sequence :start start :end real-end))
-                 (flet ((reduce-elts (a b)
-                          (if (funcall pred-fun a b)
-                              a
-                              b)))
-                   (declare (dynamic-extent #'reduce-elts))
-                   (reduce #'reduce-elts sequence :start start :end real-end))))
-            ((= real-end start)
-             nil)
-            (t
-             (error "Invalid bounding indexes for sequence of length ~S: ~S ~S, ~S ~S"
-                    (length sequence)
-                    :start start
-                    :end end)))))
   
 
   (defun rcurry (function &rest arguments)
@@ -206,6 +162,6 @@ unless it's `nil`, which means the system default."
               :while (= bytes-read buffer-size)))))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(curry extremum rcurry read-file-into-string)))
+  (export '(curry rcurry read-file-into-string)))
 
 ;;;; END OF quickutils.lisp ;;;;
