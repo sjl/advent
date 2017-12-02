@@ -5,6 +5,7 @@
   :utilities '(
 
                :curry
+               :extremum
                :rcurry
                :read-file-into-string
 

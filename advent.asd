@@ -5,7 +5,7 @@
 
   :license "MIT"
 
-  :depends-on (:iterate :losh)
+  :depends-on (:iterate :losh :split-sequence :str)
 
   :serial t
   :components ((:module "vendor" :serial t
