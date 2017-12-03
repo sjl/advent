@@ -6,6 +6,8 @@
 
                :curry
                :rcurry
+               :range
+               :compose
                :read-file-into-string
 
                )

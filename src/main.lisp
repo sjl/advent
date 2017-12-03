@@ -51,3 +51,30 @@
              (somelist #'head-valid-p line)))
     (summation (remove nil (read-file-of-lines-of-numbers "data/2017/02"))
                :key #'checksum)))
+
+
+(defun day-3-part-1 ()
+  (labels ((manhattan-distance (a b)
+             (+ (abs (- (realpart a)
+                        (realpart b)))
+                (abs (- (imagpart a)
+                        (imagpart b)))))
+           (distance-to-origin (p)
+             (manhattan-distance #c(0 0) p)))
+    (distance-to-origin (advent.spiral:number-coordinates 325489))))
+
+(defun day-3-part-2 ()
+  (flet ((neighbors (coord)
+           (iterate (for-nested ((dx :from -1 :to 1)
+                                 (dy :from -1 :to 1)))
+                    (unless (= 0 dx dy)
+                      (collect (+ coord (complex dx dy)))))))
+    (iterate
+      (with memory = (make-hash-table))
+      (initially (setf (gethash #c(0 0) memory) 1))
+      (for n :from 2)
+      (for coord = (advent.spiral:number-coordinates n))
+      (for value = (summation (neighbors coord) :key (rcurry #'gethash memory 0)))
+      (finding value :such-that (> value 325489))
+      (setf (gethash coord memory) value))))
+
