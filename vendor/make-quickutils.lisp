@@ -8,6 +8,7 @@
                :rcurry
                :range
                :compose
+               :ensure-keyword
                :read-file-into-string
 
                )

@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:CURRY :RCURRY :RANGE :COMPOSE :READ-FILE-INTO-STRING) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:CURRY :RCURRY :RANGE :COMPOSE :ENSURE-KEYWORD :READ-FILE-INTO-STRING) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -15,8 +15,8 @@
 (when (boundp '*utilities*)
   (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
                                          :CURRY :RCURRY :RANGE :COMPOSE
-                                         :ONCE-ONLY :WITH-OPEN-FILE*
-                                         :WITH-INPUT-FROM-FILE
+                                         :ENSURE-KEYWORD :ONCE-ONLY
+                                         :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
                                          :READ-FILE-INTO-STRING))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
@@ -107,6 +107,11 @@ and then calling the next one with the primary value of the last."
            (lambda (&rest arguments)
              (declare (dynamic-extent arguments))
              ,(compose-1 funs))))))
+  
+
+  (defun ensure-keyword (x)
+    "Ensure that a keyword is returned for the string designator `x`."
+    (values (intern (string x) :keyword)))
   
 
   (defmacro once-only (specs &body forms)
@@ -200,6 +205,6 @@ unless it's `nil`, which means the system default."
               :while (= bytes-read buffer-size)))))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(curry rcurry range compose read-file-into-string)))
+  (export '(curry rcurry range compose ensure-keyword read-file-into-string)))
 
 ;;;; END OF quickutils.lisp ;;;;
