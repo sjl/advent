@@ -130,3 +130,28 @@
     (incf (aref maze address)
           (if (>= offset 3) -1 1))
     (incf address offset)))
+
+
+(defun day-6/1+2 ()
+  (let* ((banks (coerce (read-file-of-numbers "data/2017/06") 'vector))
+         (seen (make-hash-table :test 'equalp)))
+    (labels ((bank-to-redistribute ()
+               (iterate (for blocks :in-vector banks :with-index bank)
+                        (finding bank :maximizing blocks)))
+             (redistribute ()
+               (iterate
+                 (with bank = (bank-to-redistribute))
+                 (with blocks-to-redistribute = (aref banks bank))
+                 (initially (setf (aref banks bank) 0))
+                 (repeat blocks-to-redistribute)
+                 (for b :modulo (length banks) :from (1+ bank))
+                 (incf (aref banks b))))
+             (mark-seen (banks cycles)
+               (setf (gethash (copy-seq banks) seen) cycles)))
+      (iterate
+        (mark-seen banks cycles)
+        (summing 1 :into cycles)
+        (redistribute)
+        (for last-seen = (gethash banks seen))
+        (until last-seen)
+        (finally (return (values cycles (- cycles last-seen))))))))
