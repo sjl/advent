@@ -25,15 +25,6 @@
            (collect (str:words line))))
 
 
-(defun contains-duplicates-p (list &key (test #'eql))
-  (iterate (for (head . tail) :on list)
-           (thereis (member head tail :test test))))
-
-(defun anagramp (string1 string2)
-  (string= (sort (copy-seq string1) #'char<)
-           (sort (copy-seq string2) #'char<)))
-
-
 ;;;; Problems -----------------------------------------------------------------
 (defun day-1/1 ()
   (iterate (for (x . y) :pairs-of-list (read-file-of-digits "data/2017/01"))
@@ -96,20 +87,23 @@
       (setf (gethash coord memory) value))))
 
 
-(defun d4-valid-passphrase-p (phrase)
-  (not (contains-duplicates-p phrase :test #'string=)))
-
 (defun day-4/1 ()
-  (count-if #'d4-valid-passphrase-p
-            (read-file-of-lines-of-words "data/2017/04")))
+  (labels ((contains-duplicates-p (list &key (test #'eql))
+             (iterate (for (head . tail) :on list)
+                      (thereis (member head tail :test test))))
+           (validp (phrase)
+             (not (contains-duplicates-p phrase :test #'string=))))
+    (count-if #'validp (read-file-of-lines-of-words "data/2017/04"))))
 
 (defun day-4/2 ()
-  (flet ((contains-anagram-p (phrase)
-           (iterate (for (word . tail) :on phrase)
-                    (thereis (find-if (curry #'anagramp word) tail)))))
-    (-<> (read-file-of-lines-of-words "data/2017/04")
-      (remove-if-not #'d4-valid-passphrase-p <>)
-      (count-if-not #'contains-anagram-p <>))))
+  (labels ((anagramp (string1 string2)
+             (string= (sort (copy-seq string1) #'char<)
+                      (sort (copy-seq string2) #'char<)))
+           (contains-anagram-p (phrase)
+             (iterate (for (word . tail) :on phrase)
+                      (thereis (find-if (curry #'anagramp word) tail)))))
+    (count-if-not #'contains-anagram-p
+                  (read-file-of-lines-of-words "data/2017/04"))))
 
 
 (defun day-5/1 ()
