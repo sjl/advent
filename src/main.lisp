@@ -101,7 +101,7 @@
                       (sort (copy-seq string2) #'char<)))
            (contains-anagram-p (phrase)
              (iterate (for (word . tail) :on phrase)
-                      (thereis (find-if (curry #'anagramp word) tail)))))
+                      (thereis (member-if (curry #'anagramp word) tail)))))
     (count-if-not #'contains-anagram-p
                   (read-file-of-lines-of-words "data/2017/04"))))
 
