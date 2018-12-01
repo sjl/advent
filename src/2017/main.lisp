@@ -1,4 +1,5 @@
 (in-package :advent)
+(named-readtables:in-readtable :interpol-syntax)
 
 
 (define-problem (2017 1 1) (data read-file-of-digits)
@@ -126,3 +127,29 @@
         (for last-seen = (gethash banks seen))
         (until last-seen)
         (finally (return (values cycle (- cycle last-seen))))))))
+
+
+(define-problem (2017 7) (data read-lines-from-file)
+  (labels
+      ((parse-line (line)
+         (ppcre:register-groups-bind
+             (name (#'parse-integer weight) ((curry #'str:split ", ") holding))
+             (#?/(\w+) \((\d+)\)(?: -> (.+))?/
+              line)
+           (values name weight holding)))
+       (insert-edge (digraph pred succ)
+         (digraph:insert-vertex digraph pred)
+         (digraph:insert-vertex digraph succ)
+         (digraph:insert-edge digraph pred succ))
+       (build-tower (lines)
+         (iterate
+           (with tower = (digraph:make-digraph :test #'equal))
+           (for line :in lines)
+           (for (values name weight holding) = (parse-line line))
+           (collect-hash (name weight) :into weights :test #'equal)
+           (digraph:insert-vertex tower name)
+           (map nil (curry #'insert-edge tower name) holding)
+           (finally (return tower)))))
+    (let ((tower (build-tower data)))
+      ;; (digraph.dot:draw tower)
+      (first (digraph:roots tower)))))

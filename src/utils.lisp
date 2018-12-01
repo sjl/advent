@@ -18,6 +18,11 @@
   (with-open-file (s path)
     (read s)))
 
+(defun read-lines-from-file (path)
+  "Read the lines in `path` into a list of strings."
+  (iterate (for line :in-file path :using #'read-line)
+           (collect line)))
+
 
 (defun read-file-of-digits (path)
   "Read all the ASCII digits in `path` into a list of integers.

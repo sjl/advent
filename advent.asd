@@ -5,7 +5,17 @@
 
   :license "MIT"
 
-  :depends-on (:iterate :losh :split-sequence :str)
+  :depends-on (
+
+               :cl-digraph
+               :cl-digraph.dot
+               :cl-ppcre
+               :iterate
+               :losh
+               :split-sequence
+               :str
+
+               )
 
   :serial t
   :components ((:module "vendor" :serial t
