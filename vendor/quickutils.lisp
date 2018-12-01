@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:CURRY :RCURRY :RANGE :COMPOSE :ENSURE-KEYWORD :READ-FILE-INTO-STRING) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,11 +13,7 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
-                                         :CURRY :RCURRY :RANGE :COMPOSE
-                                         :ENSURE-KEYWORD :ONCE-ONLY
-                                         :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
-                                         :READ-FILE-INTO-STRING))))
+  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
     "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
@@ -41,44 +37,6 @@ it must be a function name and its `fdefinition` is returned."
         function-designator
         (fdefinition function-designator)))
   )                                        ; eval-when
-
-  (defun curry (function &rest arguments)
-    "Returns a function that applies `arguments` and the arguments
-it is called with to `function`."
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (let ((fn (ensure-function function)))
-      (lambda (&rest more)
-        (declare (dynamic-extent more))
-        ;; Using M-V-C we don't need to append the arguments.
-        (multiple-value-call fn (values-list arguments) (values-list more)))))
-
-  (define-compiler-macro curry (function &rest arguments)
-    (let ((curries (make-gensym-list (length arguments) "CURRY"))
-          (fun (gensym "FUN")))
-      `(let ((,fun (ensure-function ,function))
-             ,@(mapcar #'list curries arguments))
-         (declare (optimize (speed 3) (safety 1) (debug 1)))
-         (lambda (&rest more)
-           (apply ,fun ,@curries more)))))
-  
-
-  (defun rcurry (function &rest arguments)
-    "Returns a function that applies the arguments it is called
-with and `arguments` to `function`."
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (let ((fn (ensure-function function)))
-      (lambda (&rest more)
-        (declare (dynamic-extent more))
-        (multiple-value-call fn (values-list more) (values-list arguments)))))
-  
-
-  (defun range (start end &key (step 1) (key 'identity))
-    "Return the list of numbers `n` such that `start <= n < end` and
-`n = start + k*step` for suitable integers `k`. If a function `key` is
-provided, then apply it to each number."
-    (assert (<= start end))
-    (loop :for i :from start :below end :by step :collecting (funcall key i)))
-  
 
   (defun compose (function &rest more-functions)
     "Returns a function composed of `function` and `more-functions` that applies its ;
@@ -109,9 +67,47 @@ and then calling the next one with the primary value of the last."
              ,(compose-1 funs))))))
   
 
+  (defun curry (function &rest arguments)
+    "Returns a function that applies `arguments` and the arguments
+it is called with to `function`."
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (let ((fn (ensure-function function)))
+      (lambda (&rest more)
+        (declare (dynamic-extent more))
+        ;; Using M-V-C we don't need to append the arguments.
+        (multiple-value-call fn (values-list arguments) (values-list more)))))
+
+  (define-compiler-macro curry (function &rest arguments)
+    (let ((curries (make-gensym-list (length arguments) "CURRY"))
+          (fun (gensym "FUN")))
+      `(let ((,fun (ensure-function ,function))
+             ,@(mapcar #'list curries arguments))
+         (declare (optimize (speed 3) (safety 1) (debug 1)))
+         (lambda (&rest more)
+           (apply ,fun ,@curries more)))))
+  
+
   (defun ensure-keyword (x)
     "Ensure that a keyword is returned for the string designator `x`."
     (values (intern (string x) :keyword)))
+  
+
+  (defun range (start end &key (step 1) (key 'identity))
+    "Return the list of numbers `n` such that `start <= n < end` and
+`n = start + k*step` for suitable integers `k`. If a function `key` is
+provided, then apply it to each number."
+    (assert (<= start end))
+    (loop :for i :from start :below end :by step :collecting (funcall key i)))
+  
+
+  (defun rcurry (function &rest arguments)
+    "Returns a function that applies the arguments it is called
+with and `arguments` to `function`."
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (let ((fn (ensure-function function)))
+      (lambda (&rest more)
+        (declare (dynamic-extent more))
+        (multiple-value-call fn (values-list more) (values-list arguments)))))
   
 
   (defmacro once-only (specs &body forms)
@@ -204,7 +200,24 @@ unless it's `nil`, which means the system default."
               :do (write-sequence buffer datum :start 0 :end bytes-read)
               :while (= bytes-read buffer-size)))))))
   
+
+  (defun mkstr (&rest args)
+    "Receives any number of objects (string, symbol, keyword, char, number), extracts all printed representations, and concatenates them all into one string.
+
+Extracted from _On Lisp_, chapter 4."
+    (with-output-to-string (s)
+      (dolist (a args) (princ a s))))
+  
+
+  (defun symb (&rest args)
+    "Receives any number of objects, concatenates all into one string with `#'mkstr` and converts them to symbol.
+
+Extracted from _On Lisp_, chapter 4.
+
+See also: `symbolicate`"
+    (values (intern (apply #'mkstr args))))
+  
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(curry rcurry range compose ensure-keyword read-file-into-string)))
+  (export '(compose curry ensure-keyword range rcurry read-file-into-string symb)))
 
 ;;;; END OF quickutils.lisp ;;;;

@@ -1,3 +1,7 @@
+(defpackage :advent.spiral
+  (:use :cl :losh :iterate :advent.quickutils)
+  (:export :number-coordinates))
+
 (in-package :advent.spiral)
 
 (defun layer-side-length (layer)

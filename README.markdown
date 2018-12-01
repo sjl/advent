@@ -1,3 +1,3 @@
-Solutions to http://adventofcode.com/ in Common Lisp (SBCL).
+Solutions to http://adventofcode.com/ in Common Lisp.
 
 License: MIT/X11

@@ -4,12 +4,13 @@
   "quickutils.lisp"
   :utilities '(
 
-               :curry
-               :rcurry
-               :range
                :compose
+               :curry
                :ensure-keyword
+               :range
+               :rcurry
                :read-file-into-string
+               :symb
 
                )
   :package "ADVENT.QUICKUTILS")
