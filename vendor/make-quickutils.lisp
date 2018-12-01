@@ -4,6 +4,7 @@
   "quickutils.lisp"
   :utilities '(
 
+               :extremum
                :compose
                :curry
                :ensure-keyword

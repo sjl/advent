@@ -13,5 +13,9 @@
                              (:file "quickutils")))
                (:file "package")
                (:module "src" :serial t
-                :components ((:module "2018" :serial t
+                :components ((:file "utils")
+                             (:module "2017" :serial t
+                              :components ((:file "number-spiral")
+                                           (:file "main")))
+                             (:module "2018" :serial t
                               :components ((:file "main")))))))
