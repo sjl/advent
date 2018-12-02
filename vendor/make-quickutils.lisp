@@ -5,6 +5,7 @@
   :utilities '(
 
                :extremum
+               :ensure-gethash
                :compose
                :curry
                :ensure-keyword

@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:EXTREMUM :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:EXTREMUM :ENSURE-GETHASH :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,7 +13,7 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:ENSURE-FUNCTION :EXTREMUM :MAKE-GENSYM-LIST :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+  (setf *utilities* (union *utilities* '(:ENSURE-FUNCTION :EXTREMUM :ENSURE-GETHASH :MAKE-GENSYM-LIST :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;;; To propagate return type and allow the compiler to eliminate the IF when
   ;;; it is known if the argument is function or not.
@@ -72,6 +72,16 @@ If `sequence` is empty, `nil` is returned."
                     (length sequence)
                     :start start
                     :end end)))))
+  
+
+  (defmacro ensure-gethash (key hash-table &optional default)
+    "Like `gethash`, but if `key` is not found in the `hash-table` saves the `default`
+under key before returning it. Secondary return value is true if key was
+already in the table."
+    `(multiple-value-bind (value ok) (gethash ,key ,hash-table)
+       (if ok
+           (values value ok)
+           (values (setf (gethash ,key ,hash-table) ,default) nil))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
@@ -262,6 +272,6 @@ See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(extremum compose curry ensure-keyword range rcurry read-file-into-string symb)))
+  (export '(extremum ensure-gethash compose curry ensure-keyword range rcurry read-file-into-string symb)))
 
 ;;;; END OF quickutils.lisp ;;;;

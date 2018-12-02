@@ -9,9 +9,11 @@
 
                :cl-digraph
                :cl-digraph.dot
+               :cl-interpol
                :cl-ppcre
                :iterate
                :losh
+               :named-readtables
                :split-sequence
                :str
 

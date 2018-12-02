@@ -134,8 +134,7 @@
       ((parse-line (line)
          (ppcre:register-groups-bind
              (name (#'parse-integer weight) ((curry #'str:split ", ") holding))
-             (#?/(\w+) \((\d+)\)(?: -> (.+))?/
-              line)
+             (#?/(\w+) \((\d+)\)(?: -> (.+))?/ line)
            (values name weight holding)))
        (insert-edge (digraph pred succ)
          (digraph:insert-vertex digraph pred)
@@ -149,7 +148,8 @@
            (collect-hash (name weight) :into weights :test #'equal)
            (digraph:insert-vertex tower name)
            (map nil (curry #'insert-edge tower name) holding)
-           (finally (return tower)))))
-    (let ((tower (build-tower data)))
+           (finally (return (values tower weights))))))
+    (multiple-value-bind (tower individual-weights) (build-tower data)
+      (declare (ignore individual-weights))
       ;; (digraph.dot:draw tower)
       (first (digraph:roots tower)))))
