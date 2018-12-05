@@ -66,3 +66,54 @@
        (iterate (for (k v) :in-hashtable h1)
                 (always (funcall test v (gethash k h2))))))
 
+(defun hamming-distance (sequence1 sequence2 &key (test #'eql))
+  "Return the Hamming distance between `sequence1` and `sequence2`."
+  ;; todo assert length=?
+  (let ((result 0))
+    (map nil (lambda (x y)
+               (unless (funcall test x y)
+                 (incf result)))
+         sequence1
+         sequence2)
+    result))
+
+(defun unique (list &key (test #'eql))
+  "Return a fresh list of the unique elements in `LIST`.
+
+  This differs from REMOVE-DUPLICATES in that *all* duplicate elements will be
+  removed, not just all-but-the-last.
+
+  This is O(n²).
+
+  Example:
+
+    (remove-duplicates '(3 1 3 2 3))
+    ; => (1 2 3)
+
+    (unique '(3 1 3 2 3))
+    ; => (1 2)
+
+  "
+  (iterate
+    (for a :in list)
+    (for i :from 0)
+    (unless (iterate (for b :in list)
+                     (for j :from 0)
+              (unless (= i j)
+                (thereis (funcall test a b))))
+      (collect a))))
+
+(defun extremum+ (sequence predicate)
+  "Like ALEXANDRIA:EXTREMUM but also return the position as a second value."
+  (iterate
+    (with value = nil)
+    (with position = nil)
+    (for i :from 0)
+    (for v :in-whatever sequence)
+    (if-first-time
+      (setf value v
+            position i)
+      (when (funcall predicate v value)
+        (setf value v
+              position i)))
+    (finally (return (values value position)))))

@@ -4,12 +4,13 @@
   "quickutils.lisp"
   :utilities '(
 
-               :extremum
-               :ensure-gethash
                :compose
+               :copy-hash-table
                :curry
-               :ensure-keyword
-               :range
+               :ensure-gethash
+               :extremum
+               :hash-table-keys
+               :hash-table-values
                :rcurry
                :read-file-into-string
                :symb

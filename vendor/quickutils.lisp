@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:EXTREMUM :ENSURE-GETHASH :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :HASH-TABLE-KEYS :HASH-TABLE-VALUES :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,7 +13,15 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:ENSURE-FUNCTION :EXTREMUM :ENSURE-GETHASH :MAKE-GENSYM-LIST :COMPOSE :CURRY :ENSURE-KEYWORD :RANGE :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :MAPHASH-KEYS :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun make-gensym-list (length &optional (x "G"))
+    "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
+using the second (optional, defaulting to `\"G\"`) argument."
+    (let ((g (if (typep x '(integer 0)) x (string x))))
+      (loop repeat length
+            collect (gensym g))))
+  )                                        ; eval-when
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;;; To propagate return type and allow the compiler to eliminate the IF when
   ;;; it is known if the argument is function or not.
@@ -29,6 +37,88 @@ it must be a function name and its `fdefinition` is returned."
         function-designator
         (fdefinition function-designator)))
   )                                        ; eval-when
+
+  (defun compose (function &rest more-functions)
+    "Returns a function composed of `function` and `more-functions` that applies its ;
+arguments to to each in turn, starting from the rightmost of `more-functions`,
+and then calling the next one with the primary value of the last."
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (reduce (lambda (f g)
+              (let ((f (ensure-function f))
+                    (g (ensure-function g)))
+                (lambda (&rest arguments)
+                  (declare (dynamic-extent arguments))
+                  (funcall f (apply g arguments)))))
+            more-functions
+            :initial-value function))
+
+  (define-compiler-macro compose (function &rest more-functions)
+    (labels ((compose-1 (funs)
+               (if (cdr funs)
+                   `(funcall ,(car funs) ,(compose-1 (cdr funs)))
+                   `(apply ,(car funs) arguments))))
+      (let* ((args (cons function more-functions))
+             (funs (make-gensym-list (length args) "COMPOSE")))
+        `(let ,(loop for f in funs for arg in args
+                     collect `(,f (ensure-function ,arg)))
+           (declare (optimize (speed 3) (safety 1) (debug 1)))
+           (lambda (&rest arguments)
+             (declare (dynamic-extent arguments))
+             ,(compose-1 funs))))))
+  
+
+  (defun copy-hash-table (table &key key test size
+                                     rehash-size rehash-threshold)
+    "Returns a copy of hash table `table`, with the same keys and values
+as the `table`. The copy has the same properties as the original, unless
+overridden by the keyword arguments.
+
+Before each of the original values is set into the new hash-table, `key`
+is invoked on the value. As `key` defaults to `cl:identity`, a shallow
+copy is returned by default."
+    (setf key (or key 'identity))
+    (setf test (or test (hash-table-test table)))
+    (setf size (or size (hash-table-size table)))
+    (setf rehash-size (or rehash-size (hash-table-rehash-size table)))
+    (setf rehash-threshold (or rehash-threshold (hash-table-rehash-threshold table)))
+    (let ((copy (make-hash-table :test test :size size
+                                 :rehash-size rehash-size
+                                 :rehash-threshold rehash-threshold)))
+      (maphash (lambda (k v)
+                 (setf (gethash k copy) (funcall key v)))
+               table)
+      copy))
+  
+
+  (defun curry (function &rest arguments)
+    "Returns a function that applies `arguments` and the arguments
+it is called with to `function`."
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (let ((fn (ensure-function function)))
+      (lambda (&rest more)
+        (declare (dynamic-extent more))
+        ;; Using M-V-C we don't need to append the arguments.
+        (multiple-value-call fn (values-list arguments) (values-list more)))))
+
+  (define-compiler-macro curry (function &rest arguments)
+    (let ((curries (make-gensym-list (length arguments) "CURRY"))
+          (fun (gensym "FUN")))
+      `(let ((,fun (ensure-function ,function))
+             ,@(mapcar #'list curries arguments))
+         (declare (optimize (speed 3) (safety 1) (debug 1)))
+         (lambda (&rest more)
+           (apply ,fun ,@curries more)))))
+  
+
+  (defmacro ensure-gethash (key hash-table &optional default)
+    "Like `gethash`, but if `key` is not found in the `hash-table` saves the `default`
+under key before returning it. Secondary return value is true if key was
+already in the table."
+    `(multiple-value-bind (value ok) (gethash ,key ,hash-table)
+       (if ok
+           (values value ok)
+           (values (setf (gethash ,key ,hash-table) ,default) nil))))
+  
 
   (defun extremum (sequence predicate &key key (start 0) end)
     "Returns the element of `sequence` that would appear first if the subsequence
@@ -74,84 +164,40 @@ If `sequence` is empty, `nil` is returned."
                     :end end)))))
   
 
-  (defmacro ensure-gethash (key hash-table &optional default)
-    "Like `gethash`, but if `key` is not found in the `hash-table` saves the `default`
-under key before returning it. Secondary return value is true if key was
-already in the table."
-    `(multiple-value-bind (value ok) (gethash ,key ,hash-table)
-       (if ok
-           (values value ok)
-           (values (setf (gethash ,key ,hash-table) ,default) nil))))
-  
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun make-gensym-list (length &optional (x "G"))
-    "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
-using the second (optional, defaulting to `\"G\"`) argument."
-    (let ((g (if (typep x '(integer 0)) x (string x))))
-      (loop repeat length
-            collect (gensym g))))
-  )                                        ; eval-when
-
-  (defun compose (function &rest more-functions)
-    "Returns a function composed of `function` and `more-functions` that applies its ;
-arguments to to each in turn, starting from the rightmost of `more-functions`,
-and then calling the next one with the primary value of the last."
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (reduce (lambda (f g)
-              (let ((f (ensure-function f))
-                    (g (ensure-function g)))
-                (lambda (&rest arguments)
-                  (declare (dynamic-extent arguments))
-                  (funcall f (apply g arguments)))))
-            more-functions
-            :initial-value function))
-
-  (define-compiler-macro compose (function &rest more-functions)
-    (labels ((compose-1 (funs)
-               (if (cdr funs)
-                   `(funcall ,(car funs) ,(compose-1 (cdr funs)))
-                   `(apply ,(car funs) arguments))))
-      (let* ((args (cons function more-functions))
-             (funs (make-gensym-list (length args) "COMPOSE")))
-        `(let ,(loop for f in funs for arg in args
-                     collect `(,f (ensure-function ,arg)))
-           (declare (optimize (speed 3) (safety 1) (debug 1)))
-           (lambda (&rest arguments)
-             (declare (dynamic-extent arguments))
-             ,(compose-1 funs))))))
+  (declaim (inline maphash-keys))
+  (defun maphash-keys (function table)
+    "Like `maphash`, but calls `function` with each key in the hash table `table`."
+    (maphash (lambda (k v)
+               (declare (ignore v))
+               (funcall function k))
+             table))
   
 
-  (defun curry (function &rest arguments)
-    "Returns a function that applies `arguments` and the arguments
-it is called with to `function`."
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (let ((fn (ensure-function function)))
-      (lambda (&rest more)
-        (declare (dynamic-extent more))
-        ;; Using M-V-C we don't need to append the arguments.
-        (multiple-value-call fn (values-list arguments) (values-list more)))))
-
-  (define-compiler-macro curry (function &rest arguments)
-    (let ((curries (make-gensym-list (length arguments) "CURRY"))
-          (fun (gensym "FUN")))
-      `(let ((,fun (ensure-function ,function))
-             ,@(mapcar #'list curries arguments))
-         (declare (optimize (speed 3) (safety 1) (debug 1)))
-         (lambda (&rest more)
-           (apply ,fun ,@curries more)))))
+  (defun hash-table-keys (table)
+    "Returns a list containing the keys of hash table `table`."
+    (let ((keys nil))
+      (maphash-keys (lambda (k)
+                      (push k keys))
+                    table)
+      keys))
   
 
-  (defun ensure-keyword (x)
-    "Ensure that a keyword is returned for the string designator `x`."
-    (values (intern (string x) :keyword)))
+  (declaim (inline maphash-values))
+  (defun maphash-values (function table)
+    "Like `maphash`, but calls `function` with each value in the hash table `table`."
+    (maphash (lambda (k v)
+               (declare (ignore k))
+               (funcall function v))
+             table))
   
 
-  (defun range (start end &key (step 1) (key 'identity))
-    "Return the list of numbers `n` such that `start <= n < end` and
-`n = start + k*step` for suitable integers `k`. If a function `key` is
-provided, then apply it to each number."
-    (assert (<= start end))
-    (loop :for i :from start :below end :by step :collecting (funcall key i)))
+  (defun hash-table-values (table)
+    "Returns a list containing the values of hash table `table`."
+    (let ((values nil))
+      (maphash-values (lambda (v)
+                        (push v values))
+                      table)
+      values))
   
 
   (defun rcurry (function &rest arguments)
@@ -272,6 +318,6 @@ See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(extremum ensure-gethash compose curry ensure-keyword range rcurry read-file-into-string symb)))
+  (export '(compose copy-hash-table curry ensure-gethash extremum hash-table-keys hash-table-values rcurry read-file-into-string symb)))
 
 ;;;; END OF quickutils.lisp ;;;;
