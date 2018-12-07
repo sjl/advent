@@ -117,3 +117,41 @@
         (setf value v
               position i)))
     (finally (return (values value position)))))
+
+(defun extremums (sequence predicate &key (key #'identity))
+  "Like ALEXANDRIA:EXTREMUM but return *all* values in case of a tie."
+  (iterate
+    (with results = nil)
+    (with prev = nil)
+    (for v :in-whatever sequence)
+    (for k = (funcall key v))
+    (if-first-time
+      (progn (push v results)
+             (setf prev k))
+      (cond
+        ((funcall predicate k prev) (setf results (list v)
+                                          prev k))
+        ((funcall predicate prev k) nil) ; noop
+        (t (progn (push v results)
+                  (setf prev k)))))
+    (finally (return results))))
+
+(defun char-invertcase (char)
+  "Return `char` with its case inverted, if possible."
+  (if (lower-case-p char)
+    (char-upcase char)
+    (char-downcase char)))
+
+(defun manhattan-distance (point1 point2)
+  "Return the Manhattan distance between the two points on the complex plane."
+  (+ (abs (- (realpart point1)
+             (realpart point2)))
+     (abs (- (imagpart point1)
+             (imagpart point2)))))
+
+(defun manhattan-neighbors (point)
+  "Return points adjacent to point (excluding diagonals) on the complex plane."
+  (list (+ point #c(0 1))
+        (+ point #c(1 0))
+        (+ point #c(0 -1))
+        (+ point #c(-1 0))))

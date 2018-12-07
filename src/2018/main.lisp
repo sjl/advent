@@ -122,3 +122,59 @@
                    sleepy-guard-preferred-minute)
                 (* predictable-guard
                    predictable-guard-time))))))
+
+(define-problem (2018 5) (data read-file-into-string)
+  (setf data (remove #\newline data))
+  (labels ((reactivep (x y)
+             (char= x (char-invertcase y)))
+           (react (string &aux result)
+             (doseq (char string)
+               (if (and result (reactivep char (car result)))
+                 (pop result)
+                 (push char result)))
+             (coerce (nreverse result) 'string)))
+    (values (length (react data))
+            (iterate
+              (for unit :in-vector (remove-duplicates data :test #'char-equal))
+              (for candidate = (react (remove unit data :test #'char-equal)))
+              (minimizing (length candidate))))))
+
+
+(define-problem (2018 6) (data read-lines-from-file)
+  (flet ((parse-line (line)
+           (apply #'complex (mapcar #'parse-integer (str:split ", " line))))
+         (closest (point coordinates)
+           (let ((results (extremums coordinates '<
+                                     :key (curry #'manhattan-distance point))))
+             (case (length results)
+               (1 (car results))
+               (t nil)))))
+    (let* ((coordinates (mapcar #'parse-line data))
+           (xs (mapcar #'realpart coordinates))
+           (ys (mapcar #'imagpart coordinates))
+           (left (extremum xs #'<))
+           (bottom (extremum ys #'<))
+           (right (extremum xs #'>))
+           (top (extremum ys #'>))
+           (counts (make-hash-table))
+           (infinite (make-hash-set)))
+      (iterate
+        (for-nested ((x :from left :to right)
+                     (y :from bottom :to top)))
+        (for closest = (closest (complex x y) coordinates))
+        (when closest
+          (incf (gethash closest counts 0))
+          (when (or (= left x) (= bottom y)
+                    (= right x) (= top y))
+            (hset-insert! infinite closest))))
+      (values
+        (iterate
+          (for (point size) :in-hashtable counts)
+          (unless (hset-contains-p infinite point)
+            (maximizing size)))
+        (iterate
+          (for-nested ((x :from left :to right)
+                       (y :from bottom :to top)))
+          (for point = (complex x y))
+          (for total-distance = (summation coordinates :key (curry #'manhattan-distance point)))
+          (counting (< total-distance 10000)))))))
