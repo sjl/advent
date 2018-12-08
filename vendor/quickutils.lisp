@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :HASH-TABLE-KEYS :HASH-TABLE-VALUES :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,7 +13,7 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :MAPHASH-KEYS :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :MAPHASH-KEYS :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
     "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
@@ -162,6 +162,15 @@ If `sequence` is empty, `nil` is returned."
                     (length sequence)
                     :start start
                     :end end)))))
+  
+
+  (defun flatten-once (list)
+    "Flatten `list` once."
+    (loop :for x :in list
+          :if (listp x)
+            :append x 
+          :else
+            :collect x))
   
 
   (declaim (inline maphash-keys))
@@ -318,6 +327,6 @@ See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(compose copy-hash-table curry ensure-gethash extremum hash-table-keys hash-table-values rcurry read-file-into-string symb)))
+  (export '(compose copy-hash-table curry ensure-gethash extremum flatten-once hash-table-keys hash-table-values rcurry read-file-into-string symb)))
 
 ;;;; END OF quickutils.lisp ;;;;

@@ -178,3 +178,57 @@
           (for point = (complex x y))
           (for total-distance = (summation coordinates :key (curry #'manhattan-distance point)))
           (counting (< total-distance 10000)))))))
+
+
+(define-problem (2018 7) (data read-lines-from-file)
+  (labels ((parse-line (line)
+             (ppcre:register-groups-bind
+                 (((rcurry #'aref 0) requirement target))
+                 (#?/Step (\w) must be finished before step (\w) can begin./ line)
+               (list target requirement)))
+           (make-graph (edges)
+             (let* ((vertices (remove-duplicates (flatten-once edges)))
+                    (graph (digraph:make-digraph :initial-vertices vertices)))
+               (dolist (edge edges)
+                 (digraph:insert-edge graph (first edge) (second edge)))
+               graph))
+           (char-number (char)
+             (1+ (- (char-code char) (char-code #\A))))
+           (task-length (task)
+             (+ 60 (char-number task)))
+           (decrement-workers (workers)
+             (gathering
+               (do-array (worker workers)
+                 (when worker
+                   (when (zerop (decf (cdr worker)))
+                     (gather (car worker))
+                     (setf worker nil)))))))
+    (values
+      (let ((graph (make-graph (mapcar #'parse-line data))))
+        ;; (digraph.dot:draw graph)
+        (recursively ((result nil))
+          (if (digraph:emptyp graph)
+            (coerce (nreverse result) 'string)
+            (let ((next (extremum (digraph:leafs graph) 'char<)))
+              (digraph:remove-vertex graph next)
+              (recur (cons next result))))))
+      (iterate
+        (with graph = (make-graph (mapcar #'parse-line data)))
+        ;; workers is a vector of (task . remaining-time) conses,
+        ;; or NILs for idle workers
+        (with workers = (make-array 5 :initial-element nil))
+        ;; (pr elapsed workers)
+        (for elapsed :from 0)
+        (for finished-tasks = (decrement-workers workers))
+        (map nil (curry #'digraph:remove-vertex graph) finished-tasks)
+        (for current-tasks = (remove nil (map 'list #'car workers)))
+        (for available-tasks = (-<> graph
+                                 digraph:leafs
+                                 (set-difference <> current-tasks)
+                                 (sort <> 'char<)))
+        (do-array (worker workers)
+          (when (null worker)
+            (when-let ((task (pop available-tasks)))
+              (setf worker (cons task (task-length task))))))
+        (when (and (digraph:emptyp graph) (every #'null workers))
+          (return elapsed))))))

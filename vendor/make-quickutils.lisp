@@ -9,6 +9,7 @@
                :curry
                :ensure-gethash
                :extremum
+               :flatten-once
                :hash-table-keys
                :hash-table-values
                :rcurry
