@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :WITH-GENSYMS :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,7 +13,15 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :MAPHASH-KEYS :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES :RCURRY :ONCE-ONLY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
+                                         :COMPOSE :COPY-HASH-TABLE :CURRY
+                                         :ENSURE-GETHASH :EXTREMUM
+                                         :FLATTEN-ONCE :MAPHASH-KEYS
+                                         :HASH-TABLE-KEYS :MAPHASH-VALUES
+                                         :HASH-TABLE-VALUES :STRING-DESIGNATOR
+                                         :WITH-GENSYMS :ONCE-ONLY :RCURRY
+                                         :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
+                                         :READ-FILE-INTO-STRING :MKSTR :SYMB))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
     "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
@@ -209,14 +217,48 @@ If `sequence` is empty, `nil` is returned."
       values))
   
 
-  (defun rcurry (function &rest arguments)
-    "Returns a function that applies the arguments it is called
-with and `arguments` to `function`."
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (let ((fn (ensure-function function)))
-      (lambda (&rest more)
-        (declare (dynamic-extent more))
-        (multiple-value-call fn (values-list more) (values-list arguments)))))
+  (deftype string-designator ()
+    "A string designator type. A string designator is either a string, a symbol,
+or a character."
+    `(or symbol string character))
+  
+
+  (defmacro with-gensyms (names &body forms)
+    "Binds each variable named by a symbol in `names` to a unique symbol around
+`forms`. Each of `names` must either be either a symbol, or of the form:
+
+    (symbol string-designator)
+
+Bare symbols appearing in `names` are equivalent to:
+
+    (symbol symbol)
+
+The string-designator is used as the argument to `gensym` when constructing the
+unique symbol the named variable will be bound to."
+    `(let ,(mapcar (lambda (name)
+                     (multiple-value-bind (symbol string)
+                         (etypecase name
+                           (symbol
+                            (values name (symbol-name name)))
+                           ((cons symbol (cons string-designator null))
+                            (values (first name) (string (second name)))))
+                       `(,symbol (gensym ,string))))
+            names)
+       ,@forms))
+
+  (defmacro with-unique-names (names &body forms)
+    "Binds each variable named by a symbol in `names` to a unique symbol around
+`forms`. Each of `names` must either be either a symbol, or of the form:
+
+    (symbol string-designator)
+
+Bare symbols appearing in `names` are equivalent to:
+
+    (symbol symbol)
+
+The string-designator is used as the argument to `gensym` when constructing the
+unique symbol the named variable will be bound to."
+    `(with-gensyms ,names ,@forms))
   
 
   (defmacro once-only (specs &body forms)
@@ -256,6 +298,16 @@ Example:
             ,(let ,(mapcar (lambda (n g) (list (car n) g))
                     names-and-forms gensyms)
                ,@forms)))))
+  
+
+  (defun rcurry (function &rest arguments)
+    "Returns a function that applies the arguments it is called
+with and `arguments` to `function`."
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
+    (let ((fn (ensure-function function)))
+      (lambda (&rest more)
+        (declare (dynamic-extent more))
+        (multiple-value-call fn (values-list more) (values-list arguments)))))
   
 
   (defmacro with-open-file* ((stream filespec &key direction element-type
@@ -327,6 +379,8 @@ See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(compose copy-hash-table curry ensure-gethash extremum flatten-once hash-table-keys hash-table-values rcurry read-file-into-string symb)))
+  (export '(compose copy-hash-table curry ensure-gethash extremum flatten-once
+            hash-table-keys hash-table-values with-gensyms with-unique-names
+            once-only rcurry read-file-into-string symb)))
 
 ;;;; END OF quickutils.lisp ;;;;

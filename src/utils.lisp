@@ -56,6 +56,120 @@
            (collect (str:words line))))
 
 
+;;;; Rings --------------------------------------------------------------------
+(declaim (inline ring-prev ring-next ring-data))
+
+(defstruct (ring (:constructor make-ring%))
+  (data)
+  (prev nil :type (or null ring))
+  (next nil :type (or null ring)))
+
+(defmethod print-object ((ring ring) stream)
+  (print-unreadable-object (ring stream :type t :identity t)
+    (format stream "~S" (ring-list ring))))
+
+
+(defun map-ring (function ring)
+  (if (null ring)
+    nil
+    (cons (funcall function (ring-data ring))
+          (loop
+            :for r = (ring-next ring) :then (ring-next r)
+            :until (eql r ring)
+            :collect (funcall function (ring-data r))))))
+
+(defmacro do-ring ((el ring) &body body)
+  (once-only (ring)
+    (with-gensyms (r started)
+      `(if (null ,ring)
+         nil
+         (do* ((,r ,ring (ring-next ,r))
+               (,started nil t))
+             ((and ,started (eql ,ring ,r)) (values))
+           (let ((,el (ring-data ring)))
+             ,@body))))))
+
+
+(defun ring-list (ring)
+  (map-ring #'identity ring))
+
+
+(defun ring-length (ring)
+  (let ((result 0))
+    (do-ring (el ring)
+      (declare (ignore el))
+      (incf result))
+    result))
+
+
+(defun ring-move (ring n)
+  (check-type n fixnum)
+  (if (minusp n)
+    (loop :repeat (- n) :do (setf ring (ring-prev ring)))
+    (loop :repeat n :do (setf ring (ring-next ring))))
+  ring)
+
+
+(defun ring-insert-after (ring element)
+  (if (null ring)
+    (ring element)
+    (let* ((p ring)
+           (n (ring-next ring))
+           (new (make-ring% :data element :prev p :next n)))
+      (setf (ring-next p) new
+            (ring-prev n) new)
+      new)))
+
+(defun ring-insert-before (ring element)
+  (if (null ring)
+    (ring element)
+    (let* ((p (ring-prev ring))
+           (n ring)
+           (new (make-ring% :data element :prev p :next n)))
+      (setf (ring-next p) new
+            (ring-prev n) new)
+      new)))
+
+
+(defun ring-cut (ring &key prev)
+  (assert (not (null ring)) (ring) "Cannot cut from empty ring ~S" ring)
+  (let ((n (ring-next ring)))
+    (if (eql ring n)
+      nil
+      (let ((p (ring-prev ring)))
+        (setf (ring-next p) n
+              (ring-prev n) p
+              (ring-next ring) nil
+              (ring-prev ring) nil)
+        (if prev p n)))))
+
+
+(define-modify-macro ring-cutf (&rest keywords) ring-cut)
+(define-modify-macro ring-movef (n) ring-move)
+(define-modify-macro ring-nextf () ring-next)
+(define-modify-macro ring-prevf () ring-prev)
+(define-modify-macro ring-insertf-after (element) ring-insert-after)
+(define-modify-macro ring-insertf-before (element) ring-insert-before)
+
+
+(defun ring (&rest elements)
+  (if (null elements)
+    nil
+    (iterate
+      (with start)
+      (for element :in elements)
+      (for prev = ring)
+      (for ring = (if-first-time
+                    (setf start (make-ring% :data element))
+                    (make-ring% :data element :prev prev)))
+      (when prev
+        (setf (ring-next prev) ring
+              (ring-prev ring) prev))
+      (finally (setf (ring-next ring) start
+                     (ring-prev start) ring)
+               (return start)))))
+
+
 ;;;; Miscellaneous ------------------------------------------------------------
 (defun hash-table= (h1 h2 &optional (test #'eql))
   "Return whether `h1` and `h2` have the same keys and values.

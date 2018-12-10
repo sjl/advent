@@ -12,6 +12,8 @@
                :flatten-once
                :hash-table-keys
                :hash-table-values
+               :with-gensyms
+               :once-only
                :rcurry
                :read-file-into-string
                :symb
