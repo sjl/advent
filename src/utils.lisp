@@ -2,14 +2,18 @@
 
 ;;;; Problems -----------------------------------------------------------------
 (defmacro define-problem ((year day &optional part)
-                          (data-symbol reader)
+                          (data-symbol &optional reader)
                           &body body)
   (let ((function-name (if part
                          (symb 'advent- year '- day '/ part)
-                         (symb 'advent- year '- day))))
+                         (symb 'advent- year '- day)))
+        (path (format nil "data/~D/~2,'0D.txt" year day)))
     `(defun ,function-name ()
-       (let ((,data-symbol (,reader ,(format nil "data/~D/~2,'0D.txt" year day))))
-         ,@body))))
+       ,(if (null reader)
+          `(with-open-file (,data-symbol ,path)
+             ,@body)
+          `(let ((,data-symbol (,reader ,path)))
+             ,@body)))))
 
 
 ;;;; Readers ------------------------------------------------------------------
@@ -155,3 +159,22 @@
         (+ point #c(1 0))
         (+ point #c(0 -1))
         (+ point #c(-1 0))))
+
+
+(defgeneric emptyp (collection)
+  (:documentation "Return whether `collection` is empty."))
+
+(defmethod emptyp ((list list))
+  (null list))
+
+(defmethod emptyp ((vector vector))
+  (zerop (length vector)))
+
+(defmethod emptyp ((hash-table hash-table))
+  (zerop (hash-table-count hash-table)))
+
+(defmethod emptyp ((digraph digraph:digraph))
+  (digraph:emptyp digraph))
+
+(defmethod emptyp ((hset hash-set))
+  (hset-empty-p hset))

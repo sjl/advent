@@ -207,7 +207,7 @@
       (let ((graph (make-graph (mapcar #'parse-line data))))
         ;; (digraph.dot:draw graph)
         (recursively ((result nil))
-          (if (digraph:emptyp graph)
+          (if (emptyp graph)
             (coerce (nreverse result) 'string)
             (let ((next (extremum (digraph:leafs graph) 'char<)))
               (digraph:remove-vertex graph next)
@@ -230,5 +230,36 @@
           (when (null worker)
             (when-let ((task (pop available-tasks)))
               (setf worker (cons task (task-length task))))))
-        (when (and (digraph:emptyp graph) (every #'null workers))
+        (when (and (emptyp graph) (every #'null workers))
           (return elapsed))))))
+
+
+(define-problem (2018 8) (data)
+  (labels
+      ((make-node (children metadata) (cons metadata children))
+       (children (node) (cdr node))
+       (metadata (node) (car node))
+       (read-node (stream)
+         (let* ((children-count (read stream))
+                (metadata-count (read stream))
+                (children (iterate
+                            (repeat children-count)
+                            (collect (read-node stream) :result-type vector)))
+                (metadata (iterate
+                            (repeat metadata-count)
+                            (collect (read stream)))))
+           (make-node children metadata)))
+       (node-value (node &aux (children (children node)))
+         (if (emptyp children)
+           (summation (metadata node))
+           (iterate
+             (for meta :in (metadata node))
+             (for index = (1- meta))
+             (when (array-in-bounds-p children index)
+               (summing (node-value (aref children index))))))))
+    (let ((root (read-node data)))
+      (values
+        (recursively ((node root))
+          (+ (summation (metadata node))
+             (summation (children node) :key #'recur)))
+        (node-value root)))))
