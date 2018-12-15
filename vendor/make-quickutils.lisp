@@ -7,16 +7,18 @@
                :compose
                :copy-hash-table
                :curry
+               :deletef
                :ensure-gethash
                :extremum
                :flatten-once
                :hash-table-keys
                :hash-table-values
-               :with-gensyms
                :once-only
                :rcurry
                :read-file-into-string
+               :removef
                :symb
+               :with-gensyms
 
                )
   :package "ADVENT.QUICKUTILS")

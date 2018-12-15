@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :WITH-GENSYMS :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :SYMB) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :REMOVEF :SYMB :WITH-GENSYMS) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -15,13 +15,13 @@
 (when (boundp '*utilities*)
   (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
                                          :COMPOSE :COPY-HASH-TABLE :CURRY
-                                         :ENSURE-GETHASH :EXTREMUM
+                                         :DELETEF :ENSURE-GETHASH :EXTREMUM
                                          :FLATTEN-ONCE :MAPHASH-KEYS
                                          :HASH-TABLE-KEYS :MAPHASH-VALUES
-                                         :HASH-TABLE-VALUES :STRING-DESIGNATOR
-                                         :WITH-GENSYMS :ONCE-ONLY :RCURRY
+                                         :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY
                                          :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
-                                         :READ-FILE-INTO-STRING :MKSTR :SYMB))))
+                                         :READ-FILE-INTO-STRING :REMOVEF :MKSTR
+                                         :SYMB :STRING-DESIGNATOR :WITH-GENSYMS))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
     "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
@@ -116,6 +116,16 @@ it is called with to `function`."
          (declare (optimize (speed 3) (safety 1) (debug 1)))
          (lambda (&rest more)
            (apply ,fun ,@curries more)))))
+  
+
+  (declaim (inline delete/swapped-arguments))
+  (defun delete/swapped-arguments (sequence item &rest keyword-arguments)
+    (apply #'delete item sequence keyword-arguments))
+
+  (define-modify-macro deletef (item &rest remove-keywords)
+    delete/swapped-arguments
+    "Modify-macro for `delete`. Sets place designated by the first argument to
+the result of calling `delete` with `item`, place, and the `keyword-arguments`.")
   
 
   (defmacro ensure-gethash (key hash-table &optional default)
@@ -215,50 +225,6 @@ If `sequence` is empty, `nil` is returned."
                         (push v values))
                       table)
       values))
-  
-
-  (deftype string-designator ()
-    "A string designator type. A string designator is either a string, a symbol,
-or a character."
-    `(or symbol string character))
-  
-
-  (defmacro with-gensyms (names &body forms)
-    "Binds each variable named by a symbol in `names` to a unique symbol around
-`forms`. Each of `names` must either be either a symbol, or of the form:
-
-    (symbol string-designator)
-
-Bare symbols appearing in `names` are equivalent to:
-
-    (symbol symbol)
-
-The string-designator is used as the argument to `gensym` when constructing the
-unique symbol the named variable will be bound to."
-    `(let ,(mapcar (lambda (name)
-                     (multiple-value-bind (symbol string)
-                         (etypecase name
-                           (symbol
-                            (values name (symbol-name name)))
-                           ((cons symbol (cons string-designator null))
-                            (values (first name) (string (second name)))))
-                       `(,symbol (gensym ,string))))
-            names)
-       ,@forms))
-
-  (defmacro with-unique-names (names &body forms)
-    "Binds each variable named by a symbol in `names` to a unique symbol around
-`forms`. Each of `names` must either be either a symbol, or of the form:
-
-    (symbol string-designator)
-
-Bare symbols appearing in `names` are equivalent to:
-
-    (symbol symbol)
-
-The string-designator is used as the argument to `gensym` when constructing the
-unique symbol the named variable will be bound to."
-    `(with-gensyms ,names ,@forms))
   
 
   (defmacro once-only (specs &body forms)
@@ -362,6 +328,16 @@ unless it's `nil`, which means the system default."
               :while (= bytes-read buffer-size)))))))
   
 
+  (declaim (inline remove/swapped-arguments))
+  (defun remove/swapped-arguments (sequence item &rest keyword-arguments)
+    (apply #'remove item sequence keyword-arguments))
+
+  (define-modify-macro removef (item &rest remove-keywords)
+    remove/swapped-arguments
+    "Modify-macro for `remove`. Sets place designated by the first argument to
+the result of calling `remove` with `item`, place, and the `keyword-arguments`.")
+  
+
   (defun mkstr (&rest args)
     "Receives any number of objects (string, symbol, keyword, char, number), extracts all printed representations, and concatenates them all into one string.
 
@@ -378,9 +354,53 @@ Extracted from _On Lisp_, chapter 4.
 See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
+
+  (deftype string-designator ()
+    "A string designator type. A string designator is either a string, a symbol,
+or a character."
+    `(or symbol string character))
+  
+
+  (defmacro with-gensyms (names &body forms)
+    "Binds each variable named by a symbol in `names` to a unique symbol around
+`forms`. Each of `names` must either be either a symbol, or of the form:
+
+    (symbol string-designator)
+
+Bare symbols appearing in `names` are equivalent to:
+
+    (symbol symbol)
+
+The string-designator is used as the argument to `gensym` when constructing the
+unique symbol the named variable will be bound to."
+    `(let ,(mapcar (lambda (name)
+                     (multiple-value-bind (symbol string)
+                         (etypecase name
+                           (symbol
+                            (values name (symbol-name name)))
+                           ((cons symbol (cons string-designator null))
+                            (values (first name) (string (second name)))))
+                       `(,symbol (gensym ,string))))
+            names)
+       ,@forms))
+
+  (defmacro with-unique-names (names &body forms)
+    "Binds each variable named by a symbol in `names` to a unique symbol around
+`forms`. Each of `names` must either be either a symbol, or of the form:
+
+    (symbol string-designator)
+
+Bare symbols appearing in `names` are equivalent to:
+
+    (symbol symbol)
+
+The string-designator is used as the argument to `gensym` when constructing the
+unique symbol the named variable will be bound to."
+    `(with-gensyms ,names ,@forms))
+  
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(compose copy-hash-table curry ensure-gethash extremum flatten-once
-            hash-table-keys hash-table-values with-gensyms with-unique-names
-            once-only rcurry read-file-into-string symb)))
+  (export '(compose copy-hash-table curry deletef ensure-gethash extremum
+            flatten-once hash-table-keys hash-table-values once-only rcurry
+            read-file-into-string removef symb with-gensyms with-unique-names)))
 
 ;;;; END OF quickutils.lisp ;;;;

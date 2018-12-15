@@ -1,59 +1,84 @@
 (in-package :advent)
 
+;;;; Clipboard ----------------------------------------------------------------
+(defun sh (command &key (input "") output)
+  (uiop:run-program command
+                    :output (when output :string)
+                    :input (make-string-input-stream input)))
+
+(defun pbcopy (object)
+  (sh '("pbcopy") :input (aesthetic-string object))
+  (values))
+
+(defun pbpaste ()
+  (values (sh '("pbpaste") :output t)))
+
+
+;;;; Streams ------------------------------------------------------------------
+(defun ensure-stream (input)
+  (ctypecase input
+    (stream input)
+    (string (make-string-input-stream input))))
+
+(defun ensure-string (input)
+  (ctypecase input
+    (stream (alexandria:read-stream-content-into-string input))
+    (string (copy-seq input))))
+
+
 ;;;; Problems -----------------------------------------------------------------
-(defmacro define-problem ((year day &optional part)
-                          (data-symbol &optional reader)
+(defmacro define-problem ((year day)
+                          (arg &optional (reader 'identity))
                           &body body)
-  (let ((function-name (if part
-                         (symb 'advent- year '- day '/ part)
-                         (symb 'advent- year '- day)))
-        (path (format nil "data/~D/~2,'0D.txt" year day)))
-    `(defun ,function-name ()
-       ,(if (null reader)
-          `(with-open-file (,data-symbol ,path)
-             ,@body)
-          `(let ((,data-symbol (,reader ,path)))
-             ,@body)))))
+  (multiple-value-bind (body declarations docstring)
+      (alexandria:parse-body body :documentation t)
+    (with-gensyms (file)
+      (let ((run (symb 'run)))
+        `(defun ,run (&optional ,arg)
+           ,@(when docstring (list docstring))
+           ,@declarations
+           (let ((,file (unless ,arg (open (problem-data-path ,year ,day)))))
+             (unwind-protect
+                 (progn (setf ,arg (,reader (ensure-stream (or ,arg ,file))))
+                        ,@body)
+               (when ,file (close ,file)))))))))
+
+(defun problem-data-path (year day)
+  (make-pathname
+    :directory `(:relative "data" ,(aesthetic-string year))
+    :name (format nil "~2,'0D" day)
+    :type "txt"))
 
 
 ;;;; Readers ------------------------------------------------------------------
-(defun read-form-from-file (path)
-  "Read the first form from `path`."
-  (with-open-file (s path)
-    (read s)))
-
-(defun read-lines-from-file (path)
-  "Read the lines in `path` into a list of strings."
-  (iterate (for line :in-file path :using #'read-line)
-           (collect line)))
+(defun read-numbers-from-line (line)
+  (mapcar #'parse-integer (ppcre:all-matches-as-strings "-?\\d+" line)))
 
 
-(defun read-file-of-digits (path)
-  "Read all the ASCII digits in `path` into a list of integers.
+(defun read-and-collect (stream reader)
+  (iterate (for value :in-stream stream :using reader)
+           (collect value)))
 
-  Any character in the file that's not an ASCII digit will be silently ignored.
+(defun read-all (stream)
+  "Read all forms from `stream` and return them as a fresh list."
+  (read-and-collect stream #'read))
 
-  "
-  (-<> path
-    read-file-into-string
-    (map 'list #'digit-char-p <>)
-    (remove nil <>)))
+(defun read-lines (stream)
+  "Read all lines from `stream` and return them as a fresh list of strings."
+  (read-and-collect stream #'read-line))
 
-(defun read-file-of-lines-of-numbers (path)
-  "Read the lines of numbers in `path` into a list of lists of numbers.
+(defun read-lines-of-numbers-and-garbage (stream)
+  "Read the lines of numbers in `stream` into a list of lists of numbers.
 
-  Each line must consist of whitespace-separated integers.  Empty lines will be
-  discarded.
+  Numbers can be separated by anything, even garbage.
+
+  Lines without any numbers will be discarded.
 
   "
-  (iterate (for line :in-file path :using #'read-line)
-           (for numbers = (mapcar #'parse-integer (str:words line)))
+  (iterate (for line :in-stream stream :using #'read-line)
+           (for numbers = (read-numbers-from-line line))
            (when numbers
              (collect numbers))))
-
-(defun read-file-of-lines-of-words (path)
-  (iterate (for line :in-file path :using #'read-line)
-           (collect (str:words line))))
 
 
 ;;;; Rings --------------------------------------------------------------------
@@ -292,3 +317,23 @@
 
 (defmethod emptyp ((hset hash-set))
   (hset-empty-p hset))
+
+
+(defun-inline nth-digit (n integer &optional (radix 10))
+  "Return the `n`th digit of `integer` in base `radix`, counting from the right."
+  (mod (truncate integer (expt radix n)) radix))
+
+(defun-inlineable integral-image (width height value-function)
+  ;; https://en.wikipedia.org/wiki/Summed-area_table
+  (let ((image (make-array (list width height)))
+        (last-row (1- height))
+        (last-col (1- width)))
+    (dotimes (x width)
+      (dotimes (y height)
+        (setf (aref image x y)
+              (+ (funcall value-function x y)
+                 (if (= x last-col) 0 (aref image (1+ x) y))
+                 (if (= y last-row) 0 (aref image x (1+ y)))
+                 (if (or (= x last-col) (= y last-row))
+                   0
+                   (- (aref image (1+ x) (1+ y))))))))))

@@ -1,3 +1,14 @@
+(defclass auto-module (module) ())
+
+(defmethod component-children ((self auto-module))
+  (mapcar (lambda (p) (make-instance 'cl-source-file :type "lisp"
+                        :pathname p
+                        :name (pathname-name p)
+                        :parent (component-parent self)))
+          (directory-files (component-pathname self)
+                           (make-pathname :directory nil :name *wild* :type "lisp"))))
+
+
 (asdf:defsystem :advent
   :description "Advent of Code solutions"
 
@@ -7,6 +18,8 @@
 
   :depends-on (
 
+               :1am
+               :alexandria
                :cl-digraph
                :cl-digraph.dot
                :cl-interpol
@@ -26,8 +39,7 @@
                (:file "package")
                (:module "src" :serial t
                 :components ((:file "utils")
-                             (:module "2017" :serial t
-                              :components ((:file "number-spiral")
-                                           (:file "main")))
-                             (:module "2018" :serial t
-                              :components ((:file "main")))))))
+                             #+later (:module "2017" :serial t
+                                      :components ((:file "number-spiral")
+                                                   (:file "main")))
+                             (:auto-module "2018")))))
