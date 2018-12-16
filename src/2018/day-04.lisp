@@ -66,4 +66,7 @@
               (* predictable-guard
                  predictable-guard-time)))))
 
-
+(1am:test test-2018/04
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 143415 part1))
+    (1am:is (= 49944 part2))))

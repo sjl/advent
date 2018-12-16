@@ -1,6 +1,5 @@
 (defpackage :advent/2018/01 #.cl-user::*advent-use*)
 (in-package :advent/2018/01)
-(named-readtables:in-readtable :interpol-syntax)
 
 
 (define-problem (2018 1) (data read-all)
@@ -15,3 +14,8 @@
         (if (hset-contains-p seen frequency)
           (return frequency)
           (hset-insert! seen frequency))))))
+
+(1am:test test-2018/01
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 522 part1))
+    (1am:is (= 73364 part2))))

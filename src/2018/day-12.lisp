@@ -88,12 +88,18 @@
                   (for (values key result) = (parse-rule line))
                   (setf (aref rules key) result)
                   (finally (return rules)))))
-    (values
-      (progn (do-repeat 20
-               (tick state rules))
-             (summation (hash-table-keys (pots-data state))))
-      (progn (dotimes (i (- 500000 20))
-               (when (dividesp i 1000)
-                 (pr i))
-               (tick state rules))
-             (summation (hash-table-keys (pots-data state)))))))
+    ;; Part 1 only
+    (do-repeat 20
+      (tick state rules))
+    (summation (hash-table-keys (pots-data state)))))
+
+;; (defun part-2 ()
+;;   (progn (dotimes (i (- 500000 20))
+;;            (when (dividesp i 1000)
+;;              (pr i))
+;;            (tick state rules))
+;;          (summation (hash-table-keys (pots-data state)))))
+
+(1am:test test-2018/12
+  (multiple-value-bind (part1) (run)
+    (1am:is (= 1733 part1))))

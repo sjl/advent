@@ -32,3 +32,8 @@
     (values (play players marbles)
             (play players (* marbles 100)))))
 
+
+(1am:test test-2018/09
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 398730 part1))
+    (1am:is (= 3349635509 part2))))

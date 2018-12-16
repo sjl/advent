@@ -60,3 +60,8 @@
       (when (and (emptyp graph) (every #'null workers))
         (return elapsed)))))
 
+
+(1am:test test-2018/07
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (string= "BFGKNRTWXIHPUMLQVZOYJACDSE" part1))
+    (1am:is (= 1163 part2))))

@@ -22,3 +22,7 @@
       (minimizing (length candidate)))))
 
 
+(1am:test test-2018/05
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 10708 part1))
+    (1am:is (= 5330 part2))))

@@ -42,3 +42,8 @@
                (counting (> uses 1)))
       (claim-id (first (unique claims :test #'claims-intersect-p))))))
 
+(1am:test test-2018/03
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 107663 part1))
+    (1am:is (= 1166 part2))))
+

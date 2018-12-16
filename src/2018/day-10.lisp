@@ -1,6 +1,5 @@
 (defpackage :advent/2018/10 #.cl-user::*advent-use*)
 (in-package :advent/2018/10)
-(named-readtables:in-readtable :interpol-syntax)
 
 (defun parse-line (line)
   (destructuring-bind (x y vx vy) line
@@ -54,3 +53,6 @@
     (until (string= "q" (read-line)))
     (tick stars)))
 
+(1am:test test-2018/10
+  ;; This can't really be tested automatically :(
+  (values))

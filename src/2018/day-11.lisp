@@ -1,6 +1,5 @@
 (defpackage :advent/2018/11 #.cl-user::*advent-use*)
 (in-package :advent/2018/11)
-(named-readtables:in-readtable :interpol-syntax)
 
 (defun cell (x y)
   (complex x y))
@@ -52,8 +51,14 @@
                                 (y :from 1 :to (- 301 n))))
                    (for power = (square-power x y n))
                    (finding (list x y power) :maximizing power))))
-        (values (subseq (largest-square 3) 0 2)
+        (values (str:join "," (subseq (largest-square 3) 0 2))
                 (iterate (for n :from 1 :to 300)
                          (for (x y power) = (largest-square n))
-                         (finding (list x y n) :maximizing power)))))))
+                         (finding (format nil "~D,~D,~D" x y n)
+                                  :maximizing power)))))))
 
+
+(1am:test test-2018/11
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (string= "245,14" part1))
+    (1am:is (string= "235,206,13" part2))))

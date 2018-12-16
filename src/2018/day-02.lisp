@@ -1,6 +1,5 @@
 (defpackage :advent/2018/02 #.cl-user::*advent-use*)
 (in-package :advent/2018/02)
-(named-readtables:in-readtable :interpol-syntax)
 
 
 (define-problem (2018 2) (data read-lines)
@@ -20,4 +19,7 @@
         (str:concat (subseq a 0 i)
                     (subseq a (1+ i)))))))
 
-
+(1am:test test-2018/02
+  (multiple-value-bind (part1 part2) (run)
+    (1am:is (= 8296 part1))
+    (1am:is (string= "pazvmqbftrbeosiecxlghkwud" part2))))
