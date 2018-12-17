@@ -362,3 +362,24 @@
                       :end end
                       :key key
                       :initial-value nil))))
+
+
+(defun digits (n &key (radix 10) from-end (result-type 'list))
+  "Return a fresh list of the digits of `n` in base `radix`.
+
+  By default, the digits are returned high-order first, as you would read them.
+  Use `from-end` to get them low-order first:
+
+    (digits 123)             ; => (1 2 3)
+    (digits 123 :from-end t) ; => (3 2 1)
+
+  "
+  (coerce
+    (funcall
+      (if from-end #'nreverse #'identity)
+      (iterate
+        (for (values remaining digit) = (truncate n radix))
+        (collect digit)
+        (setf n remaining)
+        (until (zerop n))))
+    result-type))

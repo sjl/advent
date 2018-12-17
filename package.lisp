@@ -22,6 +22,7 @@
     :nth-digit
     :unique
     :positions-if
+    :digits
 
     :ring
     :ring-prev
