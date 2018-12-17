@@ -337,3 +337,28 @@
                  (if (or (= x last-col) (= y last-row))
                    0
                    (- (aref image (1+ x) (1+ y))))))))))
+
+
+(defun positions-if (predicate sequence &key (start 0) end key)
+  "Return a fresh list of all positions in `sequence` that satisfy `predicate`.
+
+  Like `cl:position-if`, but returns a list of all the results.
+
+  Example:
+
+    (positions-if #'upper-case-p \"aBCdeF\")
+    ; =>
+    (1 2 5)
+
+  "
+  (let ((pos start))
+    (nreverse (reduce (lambda (result value)
+                        (prog1 (if (funcall predicate value)
+                                 (cons pos result)
+                                 result)
+                          (incf pos)))
+                      sequence
+                      :start start
+                      :end end
+                      :key key
+                      :initial-value nil))))

@@ -3,64 +3,95 @@
 (named-readtables:in-readtable :interpol-syntax)
 
 
+;;;; Pots ---------------------------------------------------------------------
 (defstruct pots data min max)
 
 (defmethod print-object ((o pots) s)
   (print-unreadable-object (o s :type t)
     (format s "~D to ~D: ~A" (pots-min o) (pots-max o)
             (iterate (for i :from (pots-min o) :to (pots-max o))
-                     (collect (if (zerop (gethash i (pots-data o) 0)) #\. #\#)
+                     (collect (if (plusp (pot o i)) #\# #\.)
                               :result-type 'string)))))
+
+
+(defun-inline pot (pots i)
+  (if (hset-contains-p (pots-data pots) i)
+    1
+    0))
+
+(defun add-pot (pots i)
+  (hset-insert! (pots-data pots) i))
+
+(defun rem-pot (pots i)
+  (hset-remove! (pots-data pots) i))
+
+(defun surroundings (pots i)
+  (make-array 5
+    :element-type 'bit
+    :initial-contents (list (pot pots (- i 2))
+                            (pot pots (- i 1))
+                            (pot pots i)
+                            (pot pots (+ i 1))
+                            (pot pots (+ i 2)))))
+
+(defun score (pots)
+  (summation (hset-elements (pots-data pots))))
+
+
+;;;; Input Parsing ------------------------------------------------------------
 (defun rune-bit (rune)
   (ecase rune
     (#\# 1)
     (#\. 0)))
 
 (defun runes-to-bits (runes)
-  (map 'list #'rune-bit runes))
+  (map 'bit-vector #'rune-bit runes))
 
-(defun list-to-hash-table (list)
-  (iterate (for value :in list)
-           (for i :from 0)
-           (when (plusp value)
-             (collect-hash (i value) :test 'eq))))
-
-(defun surroundings-key (ll l x r rr)
-  (declare (type bit ll l x r rr))
-  (+ (* (expt 2 0) ll)
-     (* (expt 2 1) l)
-     (* (expt 2 2) x)
-     (* (expt 2 3) r)
-     (* (expt 2 4) rr)))
+(defun vector-to-hash-set (vector &key (test #'eql))
+  (iterate
+    (with result = (make-hash-set :test test))
+    (for value :in-vector vector :with-index i)
+    (when (plusp value)
+      (hset-insert! result i))))
 
 (defun parse-initial-line (line)
   (ppcre:register-groups-bind
       (state)
       (#?r"initial state: (\S+)" line)
-    (list-to-hash-table (runes-to-bits state))))
+    (-<> state
+      runes-to-bits
+      (positions-if #'plusp <>)
+      (make-hash-set :initial-contents <>))))
 
 (defun parse-rule (line)
   (ppcre:register-groups-bind
       (surroundings result)
       (#?r"(\S+) => (\S)" line)
-    (values (apply #'surroundings-key (runes-to-bits surroundings))
+    (values (runes-to-bits surroundings)
             (rune-bit (aref result 0)))))
 
-(defun surroundings (state i)
-  (let ((data (pots-data state)))
-    (surroundings-key (gethash (- i 2) data 0)
-                      (gethash (- i 1) data 0)
-                      (gethash i data 0)
-                      (gethash (+ i 1) data 0)
-                      (gethash (+ i 2) data 0))))
+(defun read-problem (stream)
+  (let* ((initial (parse-initial-line (read-line stream)))
+         (state (prog1 (make-pots :data initial
+                                  :min (extremum (hset-elements initial) '<)
+                                  :max (extremum (hset-elements initial) '>))
+                  (read-line stream)))
+         (rules (iterate
+                  (for line :in-stream stream :using #'read-line)
+                  (unless (string= "" line)
+                    (for (values key result) = (parse-rule line))
+                    (collect-hash (key result) :test #'equal)))))
+    (values state rules)))
 
-(defun tick (state rules)
-  (with-slots (data min max) state
+
+;;;; Solve --------------------------------------------------------------------
+(defun tick (pots rules)
+  (with-slots (min max) pots
     (iterate
       (for i :from (- min 2) :to (+ max 2))
-      (for current = (gethash i data 0))
-      (for surroundings = (surroundings state i))
-      (for next = (aref rules surroundings))
+      (for current = (pot pots i))
+      (for surroundings = (surroundings pots i))
+      (for next = (gethash surroundings rules))
       (when (plusp next)
         (minimizing i :into next-min)
         (maximizing i :into next-max))
@@ -69,37 +100,38 @@
           (collect i :into add)
           (collect i :into rem)))
       (finally
-        (dolist (i add) (setf (gethash i data) 1))
-        (dolist (i rem) (remhash i data))
+        (map nil (curry #'add-pot pots) add)
+        (map nil (curry #'rem-pot pots) rem)
         (setf min next-min
               max next-max)
-        state))))
+        pots))))
 
 (define-problem (2018 12) (data)
-  (let* ((initial (parse-initial-line (read-line data)))
-         (state (prog1 (make-pots :data initial
-                                  :min (extremum (hash-table-keys initial) '<)
-                                  :max (extremum (hash-table-keys initial) '>))
-                  (read-line data)))
-         (rules (iterate
-                  (with rules = (make-array (expt 2 5) :initial-element 1))
-                  (for line :in-stream data :using #'read-line)
-                  (until (string= "" line))
-                  (for (values key result) = (parse-rule line))
-                  (setf (aref rules key) result)
-                  (finally (return rules)))))
-    ;; Part 1 only
-    (do-repeat 20
-      (tick state rules))
-    (summation (hash-table-keys (pots-data state)))))
+  (multiple-value-bind (pots rules) (read-problem data)
+    (values
+      (progn
+        (do-repeat 20
+          (tick pots rules))
+        (score pots))
+      (iterate
+        (for tick :from 20)
+        (format t "~%After ~D tick~:P:~%~A~%score: ~D~%> " tick pots (score pots))
+        (force-output)
+        (for input = (read-line))
+        (until (string= "q" input))
+        (tick pots rules)))))
 
-;; (defun part-2 ()
-;;   (progn (dotimes (i (- 500000 20))
-;;            (when (dividesp i 1000)
-;;              (pr i))
-;;            (tick state rules))
-;;          (summation (hash-table-keys (pots-data state)))))
+(defun part-2 ()
+  (let* ((score-per-tick 20)
+         (starting-tick 350)
+         (starting-value 7508)
+         (ticks (- 50000000000 starting-tick)))
+    (+ starting-value (* score-per-tick ticks))))
 
+
+;;;; Test ---------------------------------------------------------------------
 (1am:test test-2018/12
-  (multiple-value-bind (part1) (run)
-    (1am:is (= 1733 part1))))
+  ;; can't really test noninteractively :(
+  ;; (multiple-value-bind (part1) (run)
+  ;;   (1am:is (= 1733 part1)))
+  (values))

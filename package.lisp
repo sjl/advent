@@ -21,6 +21,7 @@
     :manhattan-neighbors
     :nth-digit
     :unique
+    :positions-if
 
     :ring
     :ring-prev
