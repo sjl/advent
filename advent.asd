@@ -20,6 +20,7 @@
 
                :1am
                :alexandria
+               :beast
                :cl-digraph
                :cl-digraph.dot
                :cl-interpol
@@ -27,6 +28,7 @@
                :iterate
                :losh
                :named-readtables
+               :pileup
                :split-sequence
                :str
 

@@ -43,6 +43,8 @@
     :ring-insertf-after
     :ring-insertf-before
 
+    :astar
+
     ))
 
 (defparameter *advent-use* '(:use :cl :losh :iterate :advent :advent.quickutils))
