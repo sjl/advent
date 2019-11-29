@@ -5,6 +5,7 @@
 
     :read-all
     :read-lines
+    :read-lines-of-words
     :read-lines-of-numbers-and-garbage
 
     :ensure-string

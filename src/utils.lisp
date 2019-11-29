@@ -54,7 +54,6 @@
 (defun read-numbers-from-line (line)
   (mapcar #'parse-integer (ppcre:all-matches-as-strings "-?\\d+" line)))
 
-
 (defun read-and-collect (stream reader)
   (iterate (for value :in-stream stream :using reader)
            (collect value)))
@@ -79,6 +78,10 @@
            (for numbers = (read-numbers-from-line line))
            (when numbers
              (collect numbers))))
+
+(defun read-lines-of-words (stream)
+  (mapcar (lambda (line) (split-sequence:split-sequence #\space line))
+          (read-lines stream)))
 
 
 ;;;; Rings --------------------------------------------------------------------

@@ -1,6 +1,7 @@
 (in-package :advent)
 (named-readtables:in-readtable :interpol-syntax)
 
+(asdf:test-system )
 
 (define-problem (2017 1 1) (data read-file-of-digits)
   (iterate
