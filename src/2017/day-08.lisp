@@ -7,7 +7,7 @@
 (defun inc (delta) delta)
 (defun dec (delta) (- delta))
 
-(define-problem (2017 8) (data read-lines) (5215)
+(define-problem (2017 8) (data read-lines) (5215 6419)
   (let ((registers (make-hash-table)))
     (macrolet ((r (register) `(gethash ,register registers 0)))
       (iterate
