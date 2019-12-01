@@ -49,6 +49,15 @@
     :name (format nil "~2,'0D" day)
     :type "txt"))
 
+(defmacro define-problem-tests ((year day) part1 part2)
+  `(1am:test ,(alexandria:symbolicate 'test-
+                                      (princ-to-string year)
+                                      '/
+                                      (princ-to-string day))
+     (multiple-value-bind (part1 part2) (,(alexandria:symbolicate 'run))
+       (1am:is (= ,part1 part1))
+       (1am:is (= ,part2 part2)))))
+
 
 ;;;; Readers ------------------------------------------------------------------
 (defun read-numbers-from-line (line)

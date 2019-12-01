@@ -2,6 +2,7 @@
   (:use :cl :losh :iterate :advent.quickutils)
   (:export
     :define-problem
+    :define-problem-tests
 
     :read-all
     :read-lines

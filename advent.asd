@@ -42,4 +42,5 @@
                (:module "src" :serial t
                 :components ((:file "utils")
                              (:file "number-spiral")
-                             (:auto-module "2018")))))
+                             (:auto-module "2018")
+                             (:auto-module "2019")))))
