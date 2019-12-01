@@ -12,7 +12,7 @@
 (defun format-output (scores)
   (str:join "" (coerce scores 'list)))
 
-(define-problem (2018 14) (data read)
+(define-problem (2018 14) (data read) ("3610281143" 20211326)
   #+sbcl (sb-ext:gc :full t)
   (iterate
     (with recipes = (make-array 2
@@ -43,8 +43,3 @@
     (move-elves recipes elves)
 
     (finally (return (values part-1 part-2)))))
-
-(1am:test test-2018/14
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (string= "3610281143" part1))
-    (1am:is (= 20211326 part2))))

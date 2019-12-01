@@ -41,7 +41,7 @@
     (finally (return result))))
 
 
-(define-problem (2018 4) (data read-lines)
+(define-problem (2018 4) (data read-lines) (143415 49944)
   (let ((guard-histograms (-<> data
                             (sort <> #'string<)
                             (mapcar #'parse-line <>)
@@ -65,8 +65,3 @@
                  sleepy-guard-preferred-minute)
               (* predictable-guard
                  predictable-guard-time)))))
-
-(1am:test test-2018/04
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 143415 part1))
-    (1am:is (= 49944 part2))))

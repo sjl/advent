@@ -11,8 +11,7 @@
     (summing fuel)
     (until (zerop fuel))))
 
-(define-problem (2019 1) (data read-all)
+(define-problem (2019 1) (data read-all) (3464458 5193796)
   (values (summation data :key #'fuel-required)
           (summation data :key #'complete-fuel-required)))
 
-(define-problem-tests (2019 1) 3464458 1)

@@ -107,6 +107,7 @@
         pots))))
 
 (define-problem (2018 12) (data)
+    ()  ;; can't really test noninteractively :(
   (multiple-value-bind (pots rules) (read-problem data)
     (values
       (progn
@@ -127,11 +128,3 @@
          (starting-value 7508)
          (ticks (- 50000000000 starting-tick)))
     (+ starting-value (* score-per-tick ticks))))
-
-
-;;;; Test ---------------------------------------------------------------------
-(1am:test test-2018/12
-  ;; can't really test noninteractively :(
-  ;; (multiple-value-bind (part1) (run)
-  ;;   (1am:is (= 1733 part1)))
-  (values))

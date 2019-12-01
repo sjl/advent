@@ -31,7 +31,7 @@
           (setf worker nil))))))
 
 
-(define-problem (2018 7) (data read-lines)
+(define-problem (2018 7) (data read-lines) ("BFGKNRTWXIHPUMLQVZOYJACDSE" 1163)
   (values
     (let ((graph (make-graph (mapcar #'parse-line data))))
       ;; (digraph.dot:draw graph)
@@ -59,9 +59,3 @@
             (setf worker (cons task (task-length task))))))
       (when (and (emptyp graph) (every #'null workers))
         (return elapsed)))))
-
-
-(1am:test test-2018/07
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (string= "BFGKNRTWXIHPUMLQVZOYJACDSE" part1))
-    (1am:is (= 1163 part2))))

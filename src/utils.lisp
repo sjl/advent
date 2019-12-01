@@ -27,21 +27,35 @@
 
 
 ;;;; Problems -----------------------------------------------------------------
+(defmacro define-problem-tests ((year day) part1 part2)
+  `(1am:test ,(alexandria:symbolicate 'test-
+                                      (princ-to-string year)
+                                      '/
+                                      (princ-to-string day))
+     (multiple-value-bind (part1 part2) (,(alexandria:symbolicate 'run))
+       (1am:is (equal ,part1 part1))
+       (1am:is (equal ,part2 part2)))))
+
 (defmacro define-problem ((year day)
                           (arg &optional (reader 'identity))
+                          (&optional answer1 answer2)
                           &body body)
   (multiple-value-bind (body declarations docstring)
       (alexandria:parse-body body :documentation t)
     (with-gensyms (file)
       (let ((run (symb 'run)))
-        `(defun ,run (&optional ,arg)
-           ,@(when docstring (list docstring))
-           ,@declarations
-           (let ((,file (unless ,arg (open (problem-data-path ,year ,day)))))
-             (unwind-protect
-                 (progn (setf ,arg (,reader (ensure-stream (or ,arg ,file))))
-                        ,@body)
-               (when ,file (close ,file)))))))))
+        `(progn
+           (defun ,run (&optional ,arg)
+             ,@(when docstring (list docstring))
+             ,@declarations
+             (let ((,file (unless ,arg (open (problem-data-path ,year ,day)))))
+               (unwind-protect
+                   (progn (setf ,arg (,reader (ensure-stream (or ,arg ,file))))
+                          ,@body)
+                 (when ,file (close ,file)))))
+           ,@(when answer1
+               (list `(define-problem-tests (,year ,day) ,answer1 ,answer2)))
+           'run)))))
 
 (defun problem-data-path (year day)
   (make-pathname
@@ -49,14 +63,6 @@
     :name (format nil "~2,'0D" day)
     :type "txt"))
 
-(defmacro define-problem-tests ((year day) part1 part2)
-  `(1am:test ,(alexandria:symbolicate 'test-
-                                      (princ-to-string year)
-                                      '/
-                                      (princ-to-string day))
-     (multiple-value-bind (part1 part2) (,(alexandria:symbolicate 'run))
-       (1am:is (= ,part1 part1))
-       (1am:is (= ,part2 part2)))))
 
 
 ;;;; Readers ------------------------------------------------------------------

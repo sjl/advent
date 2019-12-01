@@ -29,7 +29,7 @@
   (string= (sort (copy-seq string1) #'char<)
            (sort (copy-seq string2) #'char<)))
 
-(define-problem (2017 4) (data read-lines-of-words)
+(define-problem (2017 4) (data read-lines-of-words) (337 231)
   (values (count-if (lambda (phrase)
                       (not (contains-duplicates-p phrase :test #'equal)))
                     data)
@@ -37,9 +37,4 @@
                       (not (contains-duplicates-p phrase :test #'anagramp)))
                     data)))
 
-
-(1am:test test-2017/04
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 337 part1))
-    (1am:is (= 231 part2))))
 

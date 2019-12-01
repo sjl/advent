@@ -21,7 +21,7 @@
     (nth-digit 2 <>)
     (- <> 5)))
 
-(define-problem (2018 11) (serial-number read)
+(define-problem (2018 11) (serial-number read) ("245,14" "235,206,13")
   (let ((totals (make-array (list 300 300))))
     (flet ((gref (x y)
              (let ((x (1- x))
@@ -56,9 +56,3 @@
                          (for (x y power) = (largest-square n))
                          (finding (format nil "~D,~D,~D" x y n)
                                   :maximizing power)))))))
-
-
-(1am:test test-2018/11
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (string= "245,14" part1))
-    (1am:is (string= "235,206,13" part2))))

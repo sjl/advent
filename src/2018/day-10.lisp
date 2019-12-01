@@ -41,6 +41,7 @@
       (map nil #'write-line field))))
 
 (define-problem (2018 10) (data read-lines-of-numbers-and-garbage)
+    () ;; This can't really be tested automatically :(
   (iterate
     (with stars = (mapcar #'parse-line data))
     (with ticks = 0)
@@ -52,7 +53,3 @@
     (draw stars)
     (until (string= "q" (read-line)))
     (tick stars)))
-
-(1am:test test-2018/10
-  ;; This can't really be tested automatically :(
-  (values))

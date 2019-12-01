@@ -250,11 +250,6 @@
   (values))
 
 
-(define-problem (2018 15) (data read-lines)
+(define-problem (2018 15) (data read-lines) ()
   (generate-world data)
   (print-world))
-
-;; (1am:test test-2018/15
-;;   (multiple-value-bind (part1 part2) (run)
-;;     (1am:is (string= "3610281143" part1))
-;;     (1am:is (= 20211326 part2))))

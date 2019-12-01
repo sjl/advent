@@ -2,7 +2,7 @@
 (in-package :advent/2018/01)
 
 
-(define-problem (2018 1) (data read-all)
+(define-problem (2018 1) (data read-all) (522 73364)
   (values
     (summation data)
     (progn
@@ -14,8 +14,3 @@
         (if (hset-contains-p seen frequency)
           (return frequency)
           (hset-insert! seen frequency))))))
-
-(1am:test test-2018/01
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 522 part1))
-    (1am:is (= 73364 part2))))

@@ -13,6 +13,7 @@
   (coerce (nreverse result) 'string))
 
 (define-problem (2018 5) (data alexandria:read-stream-content-into-string)
+    (10708 5330)
   (deletef data #\newline)
   (values
     (length (react data))
@@ -20,9 +21,3 @@
       (for unit :in-vector (remove-duplicates data :test #'char-equal))
       (for candidate = (react (remove unit data :test #'char-equal)))
       (minimizing (length candidate)))))
-
-
-(1am:test test-2018/05
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 10708 part1))
-    (1am:is (= 5330 part2))))

@@ -12,7 +12,7 @@
       (1 (car results))
       (t nil))))
 
-(define-problem (2018 6) (data read-lines)
+(define-problem (2018 6) (data read-lines) (3420 46667)
   (let* ((coordinates (mapcar #'parse-line data))
          (xs (mapcar #'realpart coordinates))
          (ys (mapcar #'imagpart coordinates))
@@ -42,9 +42,3 @@
         (for point = (complex x y))
         (for total-distance = (summation coordinates :key (curry #'manhattan-distance point)))
         (counting (< total-distance 10000))))))
-
-
-(1am:test test-2018/06
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 3420 part1))
-    (1am:is (= 46667 part2))))

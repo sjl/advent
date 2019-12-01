@@ -19,7 +19,7 @@
   (iterate (for (dx dy) :within-radius 1 :skip-origin t)
            (collect (+ coord (complex dx dy)))))
 
-(define-problem (2017 3) (data read)
+(define-problem (2017 3) (data read) (552 330785)
   (values
     (manhattan-distance #c(0 0) (advent/spiral:number-coordinates data))
     (iterate
@@ -31,7 +31,4 @@
       (finding value :such-that (> value data))
       (setf (gethash coord memory) value))))
 
-(1am:test test-2017/03
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 552 part1))
-    (1am:is (= 330785 part2))))
+

@@ -2,7 +2,7 @@
 (in-package :advent/2018/02)
 
 
-(define-problem (2018 2) (data read-lines)
+(define-problem (2018 2) (data read-lines) (8296 "pazvmqbftrbeosiecxlghkwud")
   (values
     (let* ((freqs (mapcar #'frequencies data))
            (counts (mapcar #'hash-table-values freqs)))
@@ -18,8 +18,3 @@
       (let ((i (mismatch a b)))
         (str:concat (subseq a 0 i)
                     (subseq a (1+ i)))))))
-
-(1am:test test-2018/02
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 8296 part1))
-    (1am:is (string= "pazvmqbftrbeosiecxlghkwud" part2))))

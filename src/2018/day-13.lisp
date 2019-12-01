@@ -202,11 +202,6 @@
           (-<> carts hash-table-values first cart-position format-position)
           :such-that (= 1 carts-remaining))))))
 
-(define-problem (2018 13) (data read-lines)
+(define-problem (2018 13) (data read-lines) ("83,49" "73,36")
   (values (part-1 data)
           (part-2 data)))
-
-(1am:test test-2018/13
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (string= "83,49" part1))
-    (1am:is (string= "73,36" part2))))

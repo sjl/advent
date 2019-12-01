@@ -2,7 +2,7 @@
 (in-package :advent/2017/01)
 
 
-(define-problem (2017 1) (data read-line)
+(define-problem (2017 1) (data read-line) (1049 1508)
   (iterate
     (with digits = (map 'vector #'digit-char-p data))
     (for digit :in-vector digits)
@@ -13,7 +13,3 @@
     (when (= digit next) (sum digit :into part2))
     (finally (return (values part1 part2)))))
 
-(1am:test test-2017/01
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 1049 part1))
-    (1am:is (= 1508 part2))))

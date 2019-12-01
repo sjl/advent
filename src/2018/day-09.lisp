@@ -27,13 +27,8 @@
 
 
 (define-problem (2018 9) (data alexandria:read-stream-content-into-string)
+    (398730 3349635509)
   (multiple-value-bind (players marbles) (parse-input data)
     #+sbcl (sb-ext:gc :full t)
     (values (play players marbles)
             (play players (* marbles 100)))))
-
-
-(1am:test test-2018/09
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 398730 part1))
-    (1am:is (= 3349635509 part2))))

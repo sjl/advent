@@ -24,16 +24,10 @@
       (when (array-in-bounds-p children index)
         (summing (node-value (aref children index)))))))
 
-(define-problem (2018 8) (data)
+(define-problem (2018 8) (data) (37905 33891)
   (let ((root (read-node data)))
     (values
       (recursively ((node root))
         (+ (summation (metadata node))
            (summation (children node) :key #'recur)))
       (node-value root))))
-
-
-(1am:test test-2018/08
-  (multiple-value-bind (part1 part2) (run)
-    (1am:is (= 37905 part1))
-    (1am:is (= 33891 part2))))
