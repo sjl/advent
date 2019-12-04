@@ -2,7 +2,7 @@
 (in-package :advent/2018/14)
 
 (defun combine (recipes elves)
-  (digits (summation elves :key (curry #'aref recipes)) :from-end t))
+  (digits (summation elves :key (curry #'aref recipes))))
 
 (defun move-elves (recipes elves)
   (do-array (elf elves)
@@ -22,7 +22,7 @@
     (with elves = (make-array 2 :initial-contents '(0 1)))
     (with part-1 = nil)
     (with part-2 = nil)
-    (with target = (digits data :from-end t :result-type 'vector))
+    (with target = (digits data :result-type 'vector))
     (with target-length = (length target))
 
     (until (and part-1 part-2))

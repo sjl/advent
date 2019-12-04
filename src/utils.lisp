@@ -417,15 +417,15 @@
     (digits 123 :from-end t) ; => (3 2 1)
 
   "
-  (coerce
-    (funcall
-      (if from-end #'nreverse #'identity)
-      (iterate
-        (for (values remaining digit) = (truncate n radix))
-        (collect digit)
-        (setf n remaining)
-        (until (zerop n))))
-    result-type))
+  (let ((result (iterate
+                  (for (values remaining digit) = (truncate n radix))
+                  (collect digit)
+                  (setf n remaining)
+                  (until (zerop n)))))
+    (coerce (if from-end
+              result
+              (nreverse result))
+            result-type)))
 
 
 (defun fresh-vector (sequence)
