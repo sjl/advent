@@ -1,2 +1,2 @@
-(1 let-complex)
+(1 let-complex let-result)
 (3 define-problem)

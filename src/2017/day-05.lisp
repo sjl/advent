@@ -1,14 +1,9 @@
 (defpackage :advent/2017/05 #.cl-user::*advent-use*)
 (in-package :advent/2017/05)
 
-(defun fresh-simple-vector (sequence)
-  (if (typep sequence 'simple-vector)
-    (copy-seq sequence)
-    (coerce sequence 'simple-vector)))
-
 (defun compute (data modification-function)
   (iterate
-    (with maze = (fresh-simple-vector data))
+    (with maze = (fresh-vector data))
     (with bound = (1- (length maze)))
     (with address = 0)
     (while (<= 0 address bound))

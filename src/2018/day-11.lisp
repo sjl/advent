@@ -1,4 +1,5 @@
-(defpackage :advent/2018/11 #.cl-user::*advent-use*)
+(defpackage :advent/2018/11 #.cl-user::*advent-use*
+  (:shadow :x :y))
 (in-package :advent/2018/11)
 
 (defun cell (x y)

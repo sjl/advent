@@ -25,6 +25,13 @@
     (stream (alexandria:read-stream-content-into-string input))
     (string (copy-seq input))))
 
+(defun ensure-keyword (input)
+  (values
+    (ctypecase input
+      (keyword input)
+      (symbol (alexandria:make-keyword input))
+      (string (alexandria:make-keyword (string-upcase (str:trim input)))))))
+
 
 ;;;; Problems -----------------------------------------------------------------
 (defmacro define-problem-tests ((year day) part1 part2)
@@ -50,7 +57,8 @@
              ,@declarations
              (let ((,file (unless ,arg (open (problem-data-path ,year ,day)))))
                (unwind-protect
-                   (progn (setf ,arg (,reader (ensure-stream (or ,arg ,file))))
+                   (progn (unless ,arg
+                            (setf ,arg (,reader (ensure-stream (or ,arg ,file)))))
                           ,@body)
                  (when ,file (close ,file)))))
            ,@(when answer1
@@ -66,16 +74,19 @@
 
 
 ;;;; Readers ------------------------------------------------------------------
-(defun read-numbers-from-line (line)
+(defun read-numbers-from-string (line)
   (mapcar #'parse-integer (ppcre:all-matches-as-strings "-?\\d+" line)))
 
 (defun read-and-collect (stream reader)
   (iterate (for value :in-stream stream :using reader)
            (collect value)))
 
+
 (defun read-all (stream)
   "Read all forms from `stream` and return them as a fresh list."
   (read-and-collect stream #'read))
+(defun read-numbers (stream)
+  (read-numbers-from-string (alexandria:read-stream-content-into-string stream)))
 
 (defun read-lines (stream)
   "Read all lines from `stream` and return them as a fresh list of strings."
@@ -90,13 +101,16 @@
 
   "
   (iterate (for line :in-stream stream :using #'read-line)
-           (for numbers = (read-numbers-from-line line))
+           (for numbers = (read-numbers-from-string line))
            (when numbers
              (collect numbers))))
 
 (defun read-lines-of-words (stream)
   (mapcar (lambda (line) (split-sequence:split-sequence #\space line))
           (read-lines stream)))
+
+(defun read-comma-separated-values (stream)
+  (str:split #\, (alexandria:read-stream-content-into-string stream)))
 
 
 ;;;; Rings --------------------------------------------------------------------
@@ -213,6 +227,11 @@
                (return start)))))
 
 
+;;;; Iterate ------------------------------------------------------------------
+(defmacro returning (&rest values)
+  `(finally (return (values ,@values))))
+
+
 ;;;; Miscellaneous ------------------------------------------------------------
 (defun hash-table= (h1 h2 &optional (test #'eql))
   "Return whether `h1` and `h2` have the same keys and values.
@@ -303,12 +322,18 @@
     (char-upcase char)
     (char-downcase char)))
 
-(defun manhattan-distance (point1 point2)
+(defun-inline x (point)
+  (realpart point))
+
+(defun-inline y (point)
+  (imagpart point))
+
+(defun manhattan-distance (point1 &optional (point2 #c(0 0)))
   "Return the Manhattan distance between the two points on the complex plane."
-  (+ (abs (- (realpart point1)
-             (realpart point2)))
-     (abs (- (imagpart point1)
-             (imagpart point2)))))
+  (+ (abs (- (x point1)
+             (x point2)))
+     (abs (- (y point1)
+             (y point2)))))
 
 (defun manhattan-neighbors (point)
   "Return points adjacent to point (excluding diagonals) on the complex plane."
@@ -401,6 +426,31 @@
         (setf n remaining)
         (until (zerop n))))
     result-type))
+
+
+(defun fresh-vector (sequence)
+  (if (typep sequence 'vector)
+    (copy-seq sequence)
+    (coerce sequence 'vector)))
+
+
+(defmacro let-result ((symbol initform) &body body)
+  "Bind `symbol` to initform, execute `body`, and return `symbol`.
+
+  This is useful for creating a object, doing some work on it, and returning the
+  object.  For example:
+
+    (let-result (table (make-hash-table))
+      (setf (gethash 0 table) 'foo))
+    ; ==>
+    (let ((table (make-hash-table)))
+      (setf (gethash 0 table) 'foo)
+      table)
+
+  "
+  `(let ((,symbol ,initform))
+     ,@body
+     ,symbol))
 
 
 ;;;; A* Search ----------------------------------------------------------------

@@ -7,9 +7,15 @@
     :read-lines
     :read-lines-of-words
     :read-lines-of-numbers-and-garbage
+    :read-numbers
+    :read-numbers-from-string
+    :read-comma-separated-values
 
     :ensure-string
     :ensure-stream
+    :ensure-keyword
+
+    :returning
 
     :char-invertcase
     :emptyp
@@ -20,10 +26,14 @@
     :integral-range
     :manhattan-distance
     :manhattan-neighbors
+    :x
+    :y
     :nth-digit
     :unique
     :positions-if
     :digits
+    :fresh-vector
+    :let-result
 
     :ring
     :ring-prev
