@@ -1,5 +1,8 @@
-(defpackage :advent/2017/10 #.cl-user::*advent-use*)
-(in-package :advent/2017/10)
+(defpackage :advent/knot-hash
+  #.cl-user::*advent-use*
+  (:export :simple-knot-hash :full-knot-hash))
+
+(in-package :advent/knot-hash)
 
 (defun reverse-chunk (vector start length)
   (iterate
@@ -27,11 +30,17 @@
 (defun bytes->hex (bytes)
   (format nil "~(~{~2,'0X~}~)" bytes))
 
+(defun bytes->integer (bytes)
+  (iterate
+    (for byte :in bytes)
+    (for result :seed 0 :then (+ (ash result 8) byte))
+    (returning result)))
+
 (defun initial-lengths (string)
   (append (map 'list #'char-code string)
           (list 17 31 73 47 23)))
 
-(defun full-knot-hash (string)
+(defun full-knot-hash (string &key (result-type 'string))
   (iterate
     (with lengths = (initial-lengths string))
     (with numbers = (coerce (alexandria:iota 256) 'vector))
@@ -43,10 +52,11 @@
       (reverse-chunk numbers current length)
       (zapf current (mod (+ % length skip) 256))
       (incf skip))
-    (finally (return (bytes->hex (sparse->dense numbers))))))
-
-(define-problem (2017 10) (data alexandria:read-stream-content-into-string) ()
-  (values
-    (simple-knot-hash (read-numbers-from-string data))
-    (full-knot-hash (str:trim data))))
+    (returning
+      (let ((hash (sparse->dense numbers)))
+        (ecase result-type
+          (string (bytes->hex hash))
+          (list hash)
+          (vector (coerce hash 'vector))
+          (integer (bytes->integer hash)))))))
 

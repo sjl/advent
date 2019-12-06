@@ -1,13 +1,6 @@
 (defpackage :advent/2017/03 #.cl-user::*advent-use*)
 (in-package :advent/2017/03)
 
-(defmacro let-complex (bindings &body body)
-  `(let* (,@(iterate (for (x y val) :in bindings)
-                     (for v = (gensym))
-                     (collect `(,v ,val))
-                     (collect `(,x (realpart ,v)))
-                     (collect `(,y (imagpart ,v)))))
-     ,@body))
 
 (defun manhattan-distance (a b)
   (let-complex ((ax ay a)

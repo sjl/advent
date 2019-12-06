@@ -184,13 +184,13 @@
       (:halt (return (aref (memory machine) 0))))))
 
 
-#; Scratch --------------------------------------------------------------------
+;; #; Scratch --------------------------------------------------------------------
 
-(defparameter *m* (init '(1101 100 -1 4 99)))
-(dump *m*)
-(disassemble-operation (memory *m*) 0)
-(disassemble-program (memory *m*))
-(step *m*)
+;; (defparameter *m* (init '(1101 100 -1 4 99)))
+;; (dump *m*)
+;; (disassemble-operation (memory *m*) 0)
+;; (disassemble-program (memory *m*))
+;; (step *m*)
 
-(run #( 3 12 6 12 15 1 13 14 13 4 13 99 -1 0 1 9)
-     :input #'read :output #'print)
+;; (run #( 3 12 6 12 15 1 13 14 13 4 13 99 -1 0 1 9)
+;;      :input #'read :output #'print)

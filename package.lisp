@@ -34,6 +34,7 @@
     :digits
     :fresh-vector
     :let-result
+    :let-complex
 
     :ring
     :ring-prev

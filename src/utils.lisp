@@ -452,6 +452,14 @@
      ,@body
      ,symbol))
 
+(defmacro let-complex (bindings &body body)
+  `(let* (,@(iterate (for (x y val) :in bindings)
+                     (for v = (gensym))
+                     (collect `(,v ,val))
+                     (collect `(,x (realpart ,v)))
+                     (collect `(,y (imagpart ,v)))))
+     ,@body))
+
 
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path
