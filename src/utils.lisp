@@ -478,13 +478,6 @@
   (lambda () (pop elements)))
 
 
-(defmacro rebind ((&rest vars) &body body)
-  `(let (,@(iterate
-             (for var :in vars)
-             (collect `(,var ,var))))
-     ,@body))
-
-
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path
   state

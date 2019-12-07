@@ -37,7 +37,6 @@
     :let-result
     :let-complex
     :queue-thunk
-    :rebind
 
     :ring
     :ring-prev
