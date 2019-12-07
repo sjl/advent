@@ -13,7 +13,7 @@
   (= (ldb (byte 16 0) a)
      (ldb (byte 16 0) b)))
 
-(define-problem (2017 15) (data read-numbers) (650)
+(define-problem (2017 15) (data read-numbers) (650 336)
   (destructuring-bind (a-start b-start) data
     (values
       (iterate

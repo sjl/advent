@@ -147,6 +147,16 @@
              ,@body))))))
 
 
+(defun ring-find (ring el)
+  (cond
+    ((null ring) nil)
+    ((eql (ring-data ring) el) ring)
+    (t (loop
+         :for r = (ring-next ring) :then (ring-next r)
+         :until (eql r ring)
+         :when (eql (ring-data r) el) :return r))))
+
+
 (defun ring-list (ring)
   (map-ring #'identity ring))
 
@@ -201,6 +211,7 @@
         (if prev p n)))))
 
 
+(define-modify-macro ring-findf (el) ring-find)
 (define-modify-macro ring-cutf (&rest keywords) ring-cut)
 (define-modify-macro ring-movef (n) ring-move)
 (define-modify-macro ring-nextf () ring-next)

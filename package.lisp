@@ -42,11 +42,13 @@
     :ring-data
     :map-ring
     :do-ring
+    :ring-find
     :ring-list
     :ring-length
     :ring-move
     :ring-insert-after
     :ring-insert-before
+    :ring-findf
     :ring-cutf
     :ring-prevf
     :ring-nextf
