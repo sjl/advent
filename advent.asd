@@ -41,6 +41,8 @@
                (:file "package")
                (:module "src" :serial t
                 :components ((:file "utils")
+                             (:module "2016" :serial t
+                              :components ((:auto-module "days")))
                              (:module "2017" :serial t
                               :components ((:file "number-spiral")
                                            (:file "knot-hash")

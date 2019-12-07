@@ -2,12 +2,6 @@
 (in-package :advent/2017/03)
 
 
-(defun manhattan-distance (a b)
-  (let-complex ((ax ay a)
-                (bx by b))
-    (+ (abs (- ax bx))
-       (abs (- ay by)))))
-
 (defun neighbors (coord)
   (iterate (for (dx dy) :within-radius 1 :skip-origin t)
            (collect (+ coord (complex dx dy)))))
