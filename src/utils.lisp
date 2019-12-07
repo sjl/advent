@@ -478,6 +478,16 @@
   (lambda () (pop elements)))
 
 
+(defun bytes->hex (bytes)
+  (format nil "~(~{~2,'0X~}~)" (coerce bytes 'list)))
+
+(defun bytes->integer (bytes)
+  (iterate
+    (for byte :in (coerce bytes 'list))
+    (for result :seed 0 :then (+ (ash result 8) byte))
+    (returning result)))
+
+
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path
   state

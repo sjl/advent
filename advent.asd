@@ -21,17 +21,20 @@
                :1am
                :alexandria
                :beast
+               :bordeaux-threads
                :cl-digraph
                :cl-digraph.dot
                :cl-interpol
                :cl-ppcre
                :iterate
+               :jpl-queues
                :losh
+               :md5
+               :ironclad
                :named-readtables
                :pileup
                :split-sequence
                :str
-               :jpl-queues
 
                )
 

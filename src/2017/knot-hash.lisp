@@ -27,15 +27,6 @@
     (for i :from 0 :by 16 :below (length numbers))
     (collect (reduce #'logxor numbers :start i :end (+ i 16)))))
 
-(defun bytes->hex (bytes)
-  (format nil "~(~{~2,'0X~}~)" bytes))
-
-(defun bytes->integer (bytes)
-  (iterate
-    (for byte :in bytes)
-    (for result :seed 0 :then (+ (ash result 8) byte))
-    (returning result)))
-
 (defun initial-lengths (string)
   (append (map 'list #'char-code string)
           (list 17 31 73 47 23)))

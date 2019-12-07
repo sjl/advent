@@ -38,6 +38,9 @@
     :let-complex
     :queue-thunk
 
+    :bytes->hex
+    :bytes->integer
+
     :ring
     :ring-prev
     :ring-next
