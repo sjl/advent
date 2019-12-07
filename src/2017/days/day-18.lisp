@@ -1,21 +1,13 @@
 (defpackage :advent/2017/18 #.cl-user::*advent-use*)
 (in-package :advent/2017/18)
 
-(defmacro opcase (op &body clauses)
-  (alexandria:once-only (op)
-    `(case (first ,op)
-       ,@(iterate
-          (for ((opcode . args) . body) :in clauses)
-          (collect `(,opcode (destructuring-bind ,args (rest ,op)
-                               ,@body)))))))
-
 (defclass* machine ()
   ((id :type integer)
    (program :type vector)
    (pc :initform 0)
    (registers :initform (make-hash-table))
    (queue :initform (make-queue))
-   (waiting :initform nil)))
+   (blocked :initform nil)))
 
 (defun reg (machine register)
   (gethash register (registers machine) 0))
@@ -26,8 +18,16 @@
 
 (defun val (machine register-or-constant)
   (etypecase register-or-constant
-    (symbol (r machine register-or-constant))
+    (symbol (reg machine register-or-constant))
     (number register-or-constant)))
+
+(defmacro opcase (op &body clauses)
+  (alexandria:once-only (op)
+    `(case (first ,op)
+       ,@(iterate
+          (for ((opcode . args) . body) :in clauses)
+          (collect `(,opcode (destructuring-bind ,args (rest ,op)
+                               ,@body)))))))
 
 (defun handle-common-ops (machine op)
   (macrolet ((r (x) `(reg machine ,x))
@@ -71,18 +71,17 @@
                  (counting (= 1 (id a)))
                  (enqueue (val a x) (queue b))))
       ((rcv x) (cond ((not (queue-empty-p (queue a)))
-                      (setf (reg a x) (dequeue (queue a))))
-                     ((waiting b) (pr 'deadlock) (finish))
+                      (setf (reg a x) (dequeue (queue a))
+                            (blocked b) nil))
+                     ((blocked b) (pr 'deadlock) (finish))
                      (t (progn (decf (pc a))
-                               (setf (waiting a) t
-                                     (waiting b) nil)
+                               (setf (blocked a) t)
                                (rotatef a b))))))))
 
-(define-problem (2017 18) (data read-lines) (1187)
+(define-problem (2017 18) (data read-lines) (1187 5969)
   (setf data (map 'vector #'read-all-from-string data))
   (values (part1 data)
-          (part2 data))
-  )
+          (part2 data)))
 
 
 #; Scratch --------------------------------------------------------------------
