@@ -20,15 +20,11 @@
         (princ (gethash (complex x y) grid #\.)))
       (terpri))))
 
-(defun first-character (string)
-  (aref string 0))
-
 (defun parse-path (string)
-  (gathering
-    (ppcre:do-register-groups
-        ((#'first-character direction) (#'parse-integer distance))
-        ("([UDLR])(\\d+)" string)
-      (gather (cons direction distance)))))
+  (iterate
+    (for ((#'first-character direction) (#'parse-integer distance))
+         :matching "([UDLR])(\\d+)" :against string)
+    (collect (cons direction distance))))
 
 (defun delta (direction)
   (ecase direction

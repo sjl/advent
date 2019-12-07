@@ -33,6 +33,7 @@
     :positions-if
     :digits
     :fresh-vector
+    :first-character
     :let-result
     :let-complex
 

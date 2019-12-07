@@ -32,6 +32,9 @@
       (symbol (alexandria:make-keyword input))
       (string (alexandria:make-keyword (string-upcase (str:trim input)))))))
 
+(defun ensure-list (input)
+  (if (listp input) input (list input)))
+
 
 ;;;; Problems -----------------------------------------------------------------
 (defmacro define-problem-tests ((year day) part1 part2)
@@ -70,7 +73,6 @@
     :directory `(:relative "data" ,(aesthetic-string year))
     :name (format nil "~2,'0D" day)
     :type "txt"))
-
 
 
 ;;;; Readers ------------------------------------------------------------------
@@ -236,11 +238,6 @@
       (finally (setf (ring-next ring) start
                      (ring-prev start) ring)
                (return start)))))
-
-
-;;;; Iterate ------------------------------------------------------------------
-(defmacro returning (&rest values)
-  `(finally (return (values ,@values))))
 
 
 ;;;; Miscellaneous ------------------------------------------------------------
@@ -443,6 +440,11 @@
   (if (typep sequence 'vector)
     (copy-seq sequence)
     (coerce sequence 'vector)))
+
+
+(defun first-character (string)
+  "Return the first character of `string`."
+  (char string 0))
 
 
 (defmacro let-result ((symbol initform) &body body)
