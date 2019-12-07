@@ -1,27 +1,28 @@
 (defpackage :advent/intcode
   #.cl-user::*advent-use*
   (:shadow :step :trace)
-  (:export :init :step :run))
+  (:export :init :step :run :run-machine))
 
 (in-package :advent/intcode)
 
+(defparameter *trace-lock* (bt:make-lock "intcode trace lock"))
 
 ;;;; Data Structures ----------------------------------------------------------
 (defclass* machine ()
-  ((pc :type '(integer 0) :initform 0)
-   (memory :type 'vector)
-   (input :type 'function)
-   (output :type 'function)))
+  ((pc :type (integer 0) :initform 0)
+   (memory :type (vector integer))
+   (input :type function)
+   (output :type function)))
 
 (define-with-macro machine pc memory input output)
 
 
 (defclass* operation ()
   ((opcode :type (integer 0))
-   (name :type 'symbol)
-   (size :type '(integer 1))
-   (parameters :type 'list)
-   (perform :type 'function)))
+   (name :type symbol)
+   (size :type (integer 1))
+   (parameters :type list)
+   (perform :type function)))
 
 (defun perform-operation (opcode parameter-modes machine)
   (funcall (perform (gethash opcode *operations*))
@@ -54,24 +55,26 @@
       `(progn
          (defun ,function-name (,pmodes ,machine)
            (declare (ignorable ,pmodes))
-           (flet ((pop-mode ()
-                    (multiple-value-bind (,pms ,pm) (truncate ,pmodes 10)
-                      (setf ,pmodes ,pms)
-                      ,pm)))
-             (with-machine (,machine)
-               (let (,@(iterate
-                         (for (param kind) :in parameters)
-                         (for offset :from 0)
-                         (collect
-                           (ecase kind
-                             (in `(,param (retrieve ,machine
-                                                    (pop-mode)
-                                                    (aref memory (+ pc ,offset)))))
-                             (out `(,param (progn
-                                             (pop-mode)
-                                             (aref memory (+ pc ,offset)))))))))
-                 (incf pc ,(length parameters))
-                 ,@body))))
+           (,@(if parameters
+                `(flet ((pop-mode ()
+                          (multiple-value-bind (,pms ,pm) (truncate ,pmodes 10)
+                            (setf ,pmodes ,pms)
+                            ,pm))))
+                `(progn))
+            (with-machine (,machine)
+              (let (,@(iterate
+                        (for (param kind) :in parameters)
+                        (for offset :from 0)
+                        (collect
+                          (ecase kind
+                            (in `(,param (retrieve ,machine
+                                                   (pop-mode)
+                                                   (aref memory (+ pc ,offset)))))
+                            (out `(,param (progn
+                                            (pop-mode)
+                                            (aref memory (+ pc ,offset)))))))))
+                (incf pc ,(length parameters))
+                ,@body))))
          (setf (gethash ,opcode *operations*)
                (make-instance 'operation
                  :opcode ,opcode
@@ -172,17 +175,21 @@
 (defun step (machine &key trace)
   (with-machine (machine)
     (when trace
-      (disassemble-program (memory machine) :start pc :limit 1))
+      (bt:with-lock-held (*trace-lock*)
+        (when (numberp trace)
+          (format t "~D: " trace))
+        (disassemble-program (memory machine) :start pc :limit 1)))
     (multiple-value-bind (opcode parameter-modes) (parse-op (aref memory pc))
       (incf pc)
       (perform-operation opcode parameter-modes machine))))
 
-(defun run (program &key input output trace)
+(defun run-machine (machine &key trace)
   (iterate
-    (with machine = (init program :input input :output output))
     (case (step machine :trace trace)
       (:halt (return (aref (memory machine) 0))))))
 
+(defun run (program &key input output trace)
+  (run-machine (init program :input input :output output) :trace trace))
 
 ;; #; Scratch --------------------------------------------------------------------
 
