@@ -78,10 +78,11 @@
                                (setf (blocked a) t)
                                (rotatef a b))))))))
 
-(define-problem (2017 18) (data read-lines) (1187 5969)
-  (setf data (map 'vector #'read-all-from-string data))
-  (values (part1 data)
-          (part2 data)))
+;; TODO finish this
+;; (define-problem (2017 18) (data read-lines) (1187 5969)
+;;   (setf data (map 'vector #'read-all-from-string data))
+;;   (values (part1 data)
+;;           (part2 data)))
 
 
 #; Scratch --------------------------------------------------------------------
@@ -104,3 +105,4 @@
        "rcv b"
        "rcv c"
        "rcv d"))
+

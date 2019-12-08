@@ -3,7 +3,7 @@
 (named-readtables:in-readtable :interpol-syntax)
 
 
-(defstruct claim id left right top bottom)
+(defstruct (claim (:conc-name nil)) id left right top bottom)
 (define-with-macro claim id left right top bottom)
 
 (defun parse-claim (line)

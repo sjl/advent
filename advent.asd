@@ -25,6 +25,7 @@
                :cl-digraph
                :cl-digraph.dot
                :cl-interpol
+               :cl-netpbm
                :cl-ppcre
                :iterate
                :jpl-queues
