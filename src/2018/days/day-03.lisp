@@ -40,5 +40,5 @@
     (values
       (iterate (for uses :in-array fabric)
                (counting (> uses 1)))
-      (claim-id (first (unique claims :test #'claims-intersect-p))))))
+      (id (first (unique claims :test #'claims-intersect-p))))))
 

@@ -12,7 +12,9 @@
     (macrolet ((r (register) `(gethash ,register registers 0)))
       (iterate
         (for line :in data)
-        (for (reg op delta nil cmp-reg cmp-op cmp-bound) := (read-all-from-string line))
+        (for (reg op delta nil cmp-reg cmp-op cmp-bound)
+             := (let ((*package* (find-package :advent/2017/08)))
+                  (read-all-from-string line)))
         (when (funcall cmp-op (r cmp-reg) cmp-bound)
           (maximizing (incf (r reg) (funcall op delta)) :into highest))
         (finally (return (values (alexandria:extremum (alexandria:hash-table-values registers) #'>) highest)))))))

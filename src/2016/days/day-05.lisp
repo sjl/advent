@@ -1,13 +1,15 @@
 (defpackage :advent/2016/05 #.cl-user::*advent-use*)
 (in-package :advent/2016/05)
 
+(defparameter *fancy* nil)
 (defparameter *spinner* '#1=(#\◴ #\◷ #\◶ #\◵ . #1#))
 
 (defun string->bytes (string)
   (map 'vector #'char-code string))
 
 (defun progress (i)
-  (format t "~C~C  Iteration: ~D" #\Return (pop *spinner*) i)
+  (when *fancy*
+    (format t "~C~C  Iteration: ~D" #\Return (pop *spinner*) i))
   (force-output))
 
 (defun good-hash-p (hash)
@@ -51,9 +53,9 @@
                    (char= (aref part2 pos) #\_)) ; not already seen
           (setf (aref part2 pos) (aref hex 6))
           (when (zerop (decf remaining))
-            (format t " Cracked.~%")
+            (when *fancy* (format t " Cracked.~%"))
             (finish))))
-      (format t " [~A] / [~A]~%" part1 part2)
+      (when *fancy* (format t " [~A] / [~A]~%" part1 part2))
       (progress i))))
 
 
