@@ -1,20 +1,30 @@
 (defpackage :advent/intcode
   #.cl-user::*advent-use*
   (:shadow :step :trace)
-  (:export :init :step :run :run-machine))
+  (:export :init :step :run :run-machine :*trace*))
 
 (in-package :advent/intcode)
 
+(defparameter *trace* nil)
 (defparameter *trace-lock* (bt:make-lock "intcode trace lock"))
+
 
 ;;;; Data Structures ----------------------------------------------------------
 (defclass* machine ()
   ((pc :type (integer 0) :initform 0)
-   (memory :type (vector integer))
+   (rb :type (integer 0) :initform 0)
+   (memory :type hash-table)
    (input :type function)
    (output :type function)))
 
-(define-with-macro machine pc memory input output)
+(define-with-macro machine pc rb memory input output)
+
+(defun mref (machine address &optional (default 0))
+  (gethash address (memory machine) default))
+
+(defun (setf mref) (new-value machine address &optional (default 0))
+  (setf (gethash address (memory machine) default)
+        new-value))
 
 
 (defclass* operation ()
@@ -22,7 +32,7 @@
    (name :type symbol)
    (size :type (integer 1))
    (parameters :type list)
-   (perform :type function)))
+   (perform :type (or symbol function))))
 
 (defun perform-operation (opcode parameter-modes machine)
   (funcall (perform (gethash opcode *operations*))
@@ -30,12 +40,7 @@
 
 
 ;;;; Opcode Definition --------------------------------------------------------
-(defun retrieve (machine parameter-mode operand)
-  (ecase parameter-mode
-    (0 (aref (memory machine) operand))
-    (1 operand)))
-
-(defmacro define-opcode ((opcode name) parameters &body body)
+(defun retrieve (machine parameter-mode operand &key out)
   ;; Note that (confusingly) output parameters don't use the same addressing
   ;; scheme as input parameters.  For example: in the instruction 00002,1,2,99
   ;; all the parameter modes are 0, which means "look up the value at address
@@ -45,6 +50,16 @@
   ;; 1 (immediate mode).  So we need to handle output parameters specially.
   ;;
   ;; Sigh.
+  (ecase parameter-mode
+    (0 (if out ; position
+         operand
+         (mref machine operand)))
+    (1 operand) ; immediate
+    (2 (if out ; relative
+         (+ (rb machine) operand)
+         (mref machine (+ (rb machine) operand))))))
+
+(defmacro define-opcode ((opcode name) parameters &body body)
   (setf parameters (mapcar (lambda (param)
                              (if (symbolp param)
                                `(,param in)
@@ -66,15 +81,16 @@
                         (for (param kind) :in parameters)
                         (for offset :from 0)
                         (collect
-                          (ecase kind
-                            (in `(,param (retrieve ,machine
-                                                   (pop-mode)
-                                                   (aref memory (+ pc ,offset)))))
-                            (out `(,param (progn
-                                            (pop-mode)
-                                            (aref memory (+ pc ,offset)))))))))
+                          `(,param (retrieve ,machine
+                                             (pop-mode)
+                                             (mref ,machine (+ pc ,offset))
+                                             :out ,(ecase kind
+                                                     (in nil)
+                                                     (out t)))))))
                 (incf pc ,(length parameters))
-                ,@body))))
+                (macrolet ((mem (addr)
+                             `(mref ,',machine ,addr)))
+                  ,@body)))))
          (setf (gethash ,opcode *operations*)
                (make-instance 'operation
                  :opcode ,opcode
@@ -92,13 +108,13 @@
   :halt)
 
 (define-opcode (1 ADD) (x y (dest out))
-  (setf (aref memory dest) (+ x y)))
+  (setf (mem dest) (+ x y)))
 
 (define-opcode (2 MUL) (x y (dest out))
-  (setf (aref memory dest) (* x y)))
+  (setf (mem dest) (* x y)))
 
 (define-opcode (3 INP) ((dest out))
-  (setf (aref memory dest) (funcall input)))
+  (setf (mem dest) (funcall input)))
 
 (define-opcode (4 OUT) (val)
   (funcall output val))
@@ -112,12 +128,15 @@
     (setf pc addr)))
 
 (define-opcode (7 LES) (x y (dest out))
-  (setf (aref memory dest)
+  (setf (mem dest)
         (if (< x y) 1 0)))
 
 (define-opcode (8 EQL) (x y (dest out))
-  (setf (aref memory dest)
+  (setf (mem dest)
         (if (= x y) 1 0)))
+
+(define-opcode (9 ARB) (val)
+  (incf rb val))
 
 
 ;;;; Disassembly --------------------------------------------------------------
@@ -125,70 +144,89 @@
   (multiple-value-bind (parameter-modes opcode) (truncate n 100)
     (values opcode parameter-modes)))
 
-(defun disassemble-operation (program address)
+(defun disassemble-operation (machine address)
   (multiple-value-bind (opcode parameter-modes)
-      (parse-op (aref program address))
+      (parse-op (mref machine address))
     (let ((op (gethash opcode *operations*)))
       (if op
         (values
           `(,(name op)
             ,@(iterate
                 (for (param kind) :in (parameters op))
-                (for value :in-vector program :from (1+ address))
+                (for addr :from (1+ address))
+                (for value = (mref machine addr))
                 (for mode = (mod parameter-modes 10))
                 (collect `(,param ,(ecase kind
                                      (in (ecase mode
                                            (0 (vector value))
-                                           (1 value)))
-                                     (out value))))
+                                           (1 value)
+                                           (2 (list :r value))))
+                                     (out (ecase mode
+                                            ((0 1) value)
+                                            (2 (list :r value)))))))
                 (setf parameter-modes (truncate parameter-modes 10))))
           (size op))
-        (values `(data ,(aref program address)) 1)))))
+        (values `(data ,(mref machine address)) 1)))))
 
-(defun disassemble-program (program &key (start 0) (limit nil))
+(defun disassemble-program (machine &key (start 0) (limit nil))
   (iterate
     (when limit
       (if (zerop limit)
         (return)
         (decf limit)))
     (with address = start)
-    (with bound = (length program))
-    (while (< address bound))
-    (for (values instruction size) = (disassemble-operation program address))
+    (with addresses = (-<> (memory machine)
+                        alexandria:hash-table-keys
+                        (sort <> #'<)))
+    (with bound = (1+ (elt addresses (1- (length addresses)))))
+    (flet ((advance (addr)
+             (iterate
+               (until (null addresses))
+               (while (> addr (first addresses)))
+               (pop addresses))))
+      (advance address))
+    (while addresses)
+    (for (values instruction size) = (disassemble-operation machine address))
     (for end = (+ address size))
     (when (> end bound) ; hack to handle trailing data that looks instructionish
-      (setf instruction `(data ,(aref program address))
+      (setf instruction `(data ,(mref machine address))
             size 1
             end (1+ address)))
-    (for bytes = (coerce (subseq program address end) 'list))
-    (format t "~4D | ~{~5D~^ ~} ~36T| ~{~A~^ ~}~%" address bytes instruction)
+    (for bytes = (iterate (for i :from address :below end)
+                          (collect (mref machine i))))
+    (format t "~4D | ~4D | ~{~5D~^ ~} ~42T| ~{~A~^ ~}~%" address (rb machine) bytes instruction)
     (incf address size)))
 
 
 ;;;; Running ------------------------------------------------------------------
+(defun program->hash-table (program &key (test #'eql))
+  (iterate (for x :in-whatever program)
+           (for i :from 0)
+           (collect-hash (i x) :test test)))
+
 (defun init (program &key input output)
   (make-instance 'machine
-    :memory (fresh-vector program)
+    :memory (program->hash-table program)
     :input (or input #'read)
     :output (or output #'print)))
 
-(defun step (machine &key trace)
+(defun step (machine &key (trace *trace*))
   (with-machine (machine)
     (when trace
       (bt:with-lock-held (*trace-lock*)
-        (when (numberp trace)
-          (format t "~D: " trace))
-        (disassemble-program (memory machine) :start pc :limit 1)))
-    (multiple-value-bind (opcode parameter-modes) (parse-op (aref memory pc))
+        (unless (member trace '(t nil))
+          (format t "~A: " trace))
+        (disassemble-program machine :start pc :limit 1)))
+    (multiple-value-bind (opcode parameter-modes) (parse-op (mref machine pc))
       (incf pc)
       (perform-operation opcode parameter-modes machine))))
 
-(defun run-machine (machine &key trace)
+(defun run-machine (machine &key (trace *trace*))
   (iterate
     (case (step machine :trace trace)
-      (:halt (return (aref (memory machine) 0))))))
+      (:halt (return (mref machine 0))))))
 
-(defun run (program &key input output trace)
+(defun run (program &key input output (trace *trace*))
   (run-machine (init program :input input :output output) :trace trace))
 
 ;; #; Scratch --------------------------------------------------------------------

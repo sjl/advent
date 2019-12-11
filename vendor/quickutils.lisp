@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :REMOVEF :SYMB :WITH-GENSYMS) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM :EQUIVALENCE-CLASSES :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :REMOVEF :SYMB :WITH-GENSYMS) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -13,15 +13,13 @@
 (in-package "ADVENT.QUICKUTILS")
 
 (when (boundp '*utilities*)
-  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION
-                                         :COMPOSE :COPY-HASH-TABLE :CURRY
-                                         :DELETEF :ENSURE-GETHASH :EXTREMUM
-                                         :FLATTEN-ONCE :MAPHASH-KEYS
-                                         :HASH-TABLE-KEYS :MAPHASH-VALUES
-                                         :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY
-                                         :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
-                                         :READ-FILE-INTO-STRING :REMOVEF :MKSTR
-                                         :SYMB :STRING-DESIGNATOR :WITH-GENSYMS))))
+  (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE
+                                         :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM
+                                         :EQUIVALENCE-CLASSES :FLATTEN-ONCE :MAPHASH-KEYS
+                                         :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES
+                                         :ONCE-ONLY :RCURRY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
+                                         :READ-FILE-INTO-STRING :REMOVEF :MKSTR :SYMB
+                                         :STRING-DESIGNATOR :WITH-GENSYMS))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
     "Returns a list of `length` gensyms, each generated as if with a call to `make-gensym`,
@@ -180,6 +178,32 @@ If `sequence` is empty, `nil` is returned."
                     (length sequence)
                     :start start
                     :end end)))))
+  
+
+  (defun equivalence-classes (equiv seq)
+    "Partition the sequence `seq` into a list of equivalence classes
+defined by the equivalence relation `equiv`."
+    (let ((classes nil))
+      (labels ((find-equivalence-class (x)
+                 (member-if (lambda (class)
+                              (funcall equiv x (car class)))
+                            classes))
+               
+               (add-to-class (x)
+                 (let ((class (find-equivalence-class x)))
+                   (if class
+                       (push x (car class))
+                       (push (list x) classes)))))
+        (declare (dynamic-extent (function find-equivalence-class)
+                                 (function add-to-class))
+                 (inline find-equivalence-class
+                         add-to-class))
+        
+        ;; Partition into equivalence classes.
+        (map nil #'add-to-class seq)
+        
+        ;; Return the classes.
+        classes)))
   
 
   (defun flatten-once (list)
@@ -399,8 +423,8 @@ unique symbol the named variable will be bound to."
     `(with-gensyms ,names ,@forms))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(compose copy-hash-table curry deletef ensure-gethash extremum
-            flatten-once hash-table-keys hash-table-values once-only rcurry
-            read-file-into-string removef symb with-gensyms with-unique-names)))
+  (export '(compose copy-hash-table curry deletef ensure-gethash extremum equivalence-classes
+            flatten-once hash-table-keys hash-table-values once-only rcurry read-file-into-string
+            removef symb with-gensyms with-unique-names)))
 
 ;;;; END OF quickutils.lisp ;;;;

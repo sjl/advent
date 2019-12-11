@@ -10,6 +10,7 @@
     :read-numbers
     :read-numbers-from-string
     :read-comma-separated-values
+    :read-2d-array
 
     :ensure-string
     :ensure-stream
@@ -37,6 +38,8 @@
     :let-result
     :let-complex
     :queue-thunk
+    :bounds
+    :draw-bitmap
 
     :bytes->hex
     :bytes->integer

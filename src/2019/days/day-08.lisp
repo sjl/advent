@@ -23,18 +23,15 @@
                       (#\0 0)))))
 
 (defun decode-image (layers)
-  (destructuring-bind (height width) (array-dimensions (first layers))
-    (let-result (image (make-array (list width height)))
+  (gathering
+    (destructuring-bind (height width) (array-dimensions (first layers))
       (do-range ((y 0 height)
                  (x 0 width))
-        (setf (aref image x y)
-              (pixel-color layers y x))))))
+        (gather (cons (complex x y) (pixel-color layers y x)))))))
 
 (define-problem (2019 8) (stream) (1806)
   (let ((image (read-image stream 25 6)))
-    (netpbm:write-to-file "out/2019-08.pbm" (decode-image image)
-                          :if-exists :supersede
-                          :format :pbm)
+    (draw-bitmap (decode-image image) "out/2019-08.pbm")
     (iterate
       (for layer :in image)
       (finding (* (count-digit layer #\1)

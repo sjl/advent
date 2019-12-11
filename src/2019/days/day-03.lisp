@@ -1,18 +1,9 @@
 (defpackage :advent/2019/03 #.cl-user::*advent-use*)
 (in-package :advent/2019/03)
 
-(defun bounds (grid)
-  (multiple-value-bind (bottom top)
-      (losh:extrema #'< (alexandria:hash-table-keys grid) :key #'y)
-    (multiple-value-bind (left right)
-        (losh:extrema #'< (alexandria:hash-table-keys grid) :key #'x)
-      (values (x left)
-              (x right)
-              (y top)
-              (y bottom)))))
-
 (defun print-grid (grid)
-  (multiple-value-bind (left right top bottom) (bounds grid)
+  (multiple-value-bind (left right bottom top)
+      (bounds (alexandria:hash-table-keys grid))
     (iterate
       (for y :from (1+ top) :downto (1- bottom))
       (iterate

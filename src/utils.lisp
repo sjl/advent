@@ -114,6 +114,18 @@
 (defun read-comma-separated-values (stream)
   (str:split #\, (alexandria:read-stream-content-into-string stream)))
 
+(defun read-2d-array (stream)
+  (iterate
+    (with lines = (read-lines stream))
+    (with result = (make-array (list (length lines) (length (first lines)))))
+    (for row :from 0)
+    (for line :in lines)
+    (iterate
+      (for col :from 0)
+      (for char :in-string line)
+      (setf (aref result row col) char))
+    (returning result)))
+
 
 ;;;; Rings --------------------------------------------------------------------
 (declaim (inline ring-prev ring-next ring-data))
@@ -466,11 +478,18 @@
      ,symbol))
 
 (defmacro let-complex (bindings &body body)
-  `(let* (,@(iterate (for (x y val) :in bindings)
-                     (for v = (gensym))
-                     (collect `(,v ,val))
-                     (collect `(,x (realpart ,v)))
-                     (collect `(,y (imagpart ,v)))))
+  `(let* (,@(iterate
+              (for binding :in bindings)
+              (for (x y val) = (etypecase binding
+                                 (symbol (list
+                                           (alexandria:symbolicate binding 'x)
+                                           (alexandria:symbolicate binding 'y)
+                                           binding))
+                                 (cons binding)))
+              (for v = (gensym))
+              (collect `(,v ,val))
+              (collect `(,x (realpart ,v)))
+              (collect `(,y (imagpart ,v)))))
      ,@body))
 
 
@@ -487,6 +506,44 @@
     (for result :seed 0 :then (+ (ash result 8) byte))
     (returning result)))
 
+
+(defun bounds (coords)
+  "Return the left, right, bottom, and top bounds of `coords`."
+  (multiple-value-bind (bottom top) (losh:extrema #'< coords :key #'y)
+    (multiple-value-bind (left right) (losh:extrema #'< coords :key #'x)
+      (values (x left)
+              (x right)
+              (y bottom)
+              (y top)))))
+
+
+(defun flip-vertically (image-array)
+  (destructuring-bind (width height) (array-dimensions image-array)
+    (dotimes (y (truncate height 2))
+      (dotimes (x width)
+        (rotatef (aref image-array x y)
+                 (aref image-array x (- height y 1)))))))
+
+(defun draw-bitmap (pixels path &key flip-vertically)
+  "Draw `pixels` to `path`.
+
+  `pixels` must be a sequence of `(position . color)` conses.
+
+  "
+  (multiple-value-bind (left right bottom top) (bounds (mapcar #'car pixels))
+    (let ((origin (complex left bottom))
+          (image (make-array (list (1+ (- right left))
+                                   (1+ (- top bottom)))
+                   :initial-element 0)))
+      (iterate
+        (for (pos . color) :in-whatever pixels)
+        (for pixel = (- pos origin))
+        (setf (aref image (x pixel) (y pixel)) color))
+      (when flip-vertically
+        (flip-vertically image))
+      (netpbm:write-to-file path image
+                            :if-exists :supersede
+                            :format :pbm))))
 
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path

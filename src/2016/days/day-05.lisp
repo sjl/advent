@@ -26,17 +26,13 @@
     (with part2 = (make-string 8 :initial-element #\_))
     (returning part1 part2)
 
-    ;; Instead create a fresh string of the entire ID every time, we keep
-    ;; a buffer and just replace the numeric portion on each iteration.
-    (with n = (length data))
-    (with buffer = (make-array 1024 :fill-pointer n :element-type '(unsigned-byte 8)))
-    (initially (replace buffer (string->bytes data)))
-
     (for i :from 0)
-    (for id = (string->bytes (princ-to-string i)))
-    (setf (fill-pointer buffer) (+ n (length id)))
-    (replace buffer id :start1 n)
-    (for hash = (md5:md5sum-sequence buffer))
+
+    ;; Instead create a fresh string of the entire ID every time, we could keep
+    ;; a buffer and just replace the numeric portion on each iteration.
+    ;; Unfortunately CCL's MD5 implementation wants a simple-array, not one with
+    ;; a fill pointer.  Welp.
+    (for hash = (md5:md5sum-string (format nil "~A~D" data i)))
 
     (when (dividesp i 100000)
       (progress i))

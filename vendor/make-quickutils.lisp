@@ -10,6 +10,7 @@
                :deletef
                :ensure-gethash
                :extremum
+               :equivalence-classes
                :flatten-once
                :hash-table-keys
                :hash-table-values

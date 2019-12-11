@@ -1,5 +1,5 @@
 (defpackage :advent/2018/10 #.cl-user::*advent-use*
-  (:shadow :x :y))
+  (:shadow :x :y :bounds))
 (in-package :advent/2018/10)
 
 (defun parse-line (line)
