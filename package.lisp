@@ -11,6 +11,8 @@
     :read-numbers-from-string
     :read-comma-separated-values
     :read-2d-array
+    :read-before
+    :read-to
 
     :ensure-string
     :ensure-stream
@@ -69,4 +71,5 @@
 
     ))
 
-(defparameter *advent-use* '(:use :cl :losh :iterate :advent :advent.quickutils))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *advent-use* '(:use :cl :losh :iterate :advent :advent.quickutils)))

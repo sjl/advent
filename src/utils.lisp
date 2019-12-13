@@ -84,6 +84,53 @@
            (collect value)))
 
 
+(defun read-before (char &optional (discard-delimiter t) (stream *standard-input*) (eof-error-p t) eof-value)
+  "Read characters from `stream` up to, but *not* including, `char`.
+
+  A string of the characters read will be returned.
+
+  If `discard-delimiter` is true, the `char` (if any) will be consumed from the
+  stream.  It will not be included in the results — use `read-to` for that.
+
+  EOF is only reported when an EOF is encountered immediately.  Otherwise the
+  remaining characters will be read and returned (and EOF reported on the next
+  invocation).
+
+  "
+  (if (null (peek-char nil stream nil))
+    (if eof-error-p
+      (error 'end-of-file)
+      eof-value)
+    (iterate
+      (for c = (peek-char nil stream nil))
+      (until (null c))
+      (when (char= char c)
+        (when discard-delimiter
+          (read-char stream))
+        (finish))
+      (collect (read-char stream) :result-type 'string))))
+
+(defun read-to (char &optional (stream *standard-input*) (eof-error-p t) eof-value)
+  "Read characters from `stream` up to and including `char`.
+
+  A string of the characters read will be returned.
+
+  EOF is only reported when an EOF is encountered immediately.  Otherwise the
+  remaining characters will be read and returned (and EOF reported on the next
+  invocation).
+
+  "
+  (if (null (peek-char nil stream nil))
+    (if eof-error-p
+      (error 'end-of-file)
+      eof-value)
+    (iterate
+      (for c = (peek-char nil stream nil))
+      (until (null c))
+      (collect (read-char stream) :result-type 'string)
+      (until (char= char c)))))
+
+
 (defun read-all (stream)
   "Read all forms from `stream` and return them as a fresh list."
   (read-and-collect stream #'read))
@@ -524,6 +571,7 @@
         (rotatef (aref image-array x y)
                  (aref image-array x (- height y 1)))))))
 
+
 (defun draw-bitmap (pixels path &key flip-vertically)
   "Draw `pixels` to `path`.
 
@@ -544,6 +592,7 @@
       (netpbm:write-to-file path image
                             :if-exists :supersede
                             :format :pbm))))
+
 
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path

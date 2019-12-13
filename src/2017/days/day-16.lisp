@@ -3,12 +3,8 @@
 
 (defparameter *initial* "abcdefghijklmnop")
 
-(defun shift (array &aux (tmp (aref array (1- (length array)))))
-  (dotimes (i (length array))
-    (rotatef tmp (aref array i))))
-
 (defun spin (dancers n)
-  (do-repeat n (shift dancers)))
+  (alexandria:rotate dancers n))
 
 (defun exchange (dancers i j)
   (rotatef (aref dancers i)
