@@ -50,3 +50,63 @@
 
 
 #; Scratch --------------------------------------------------------------------
+
+(defun .letter ()
+  (smug:.is #'alpha-char-p))
+
+(defun .digit ()
+  (smug:.is #'digit-char-p))
+
+(defun .number ()
+  (smug:.let* ((s (smug:.map 'string (.digit))))
+    (smug:.identity (parse-integer s))))
+
+(defun .header-guts ()
+  (smug:.let* ((length (.number))
+               (_ (smug:.char= #\x))
+               (repetitions (.number)))
+    (smug:.identity (cons length repetitions))))
+
+(defun .header ()
+  (smug:.prog2 (smug:.char= #\left_parenthesis)
+               (.header-guts)
+               (smug:.char= #\right_parenthesis)))
+
+(defun .raw% (n)
+  (if (zerop n)
+    (smug:.identity nil)
+    (smug:.let* ((x (smug:.item))
+                 (more (.raw (1- n))))
+      (smug:.identity (cons x more)))))
+
+(defun .raw (n &key (result-type 'list))
+  (smug:.let* ((result (.raw% n)))
+    (smug:.identity (coerce result result-type))))
+
+(defun .v1-compressed-chunk ()
+  (smug:.let* ((header (.header))
+               (contents (.raw (car header) :result-type 'string)))
+    (smug:.identity (vector (cdr header) contents))))
+
+(defun .data ()
+  (smug:.map 'string (.letter)))
+
+(defun .v1 ()
+  (smug:.first
+    (smug:.map 'list (smug:.or (.v1-compressed-chunk)
+                               (.data)))))
+
+(defun v1 (data)
+  (smug:parse (.v1) data))
+
+(v1 "(10x2)(3x1)abcdefghijklmno")
+
+(defun v2 (data)
+  (recursively ((tree (v1 data)))
+    (etypecase tree
+      (list (mapcar #'recur tree))
+      (string tree)
+      (vector (vector (aref tree 0)
+                      (recur (v1 (aref tree 1))))))))
+
+(v2 "(10x2)(3x1)abcdefghijkl(2x10)mno")
