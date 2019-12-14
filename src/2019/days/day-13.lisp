@@ -1,4 +1,4 @@
-(defpackage :advent/2019/13 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/13)
 (in-package :advent/2019/13)
 
 (defun tile (val)

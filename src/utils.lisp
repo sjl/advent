@@ -75,6 +75,12 @@
     :type "txt"))
 
 
+(defmacro defpackage* (name &body body)
+  `(defpackage ,name
+     (:use :cl :losh :iterate :advent :advent.quickutils)
+     ,@body))
+
+
 ;;;; Readers ------------------------------------------------------------------
 (defun read-numbers-from-string (line)
   (mapcar #'parse-integer (ppcre:all-matches-as-strings "-?\\d+" line)))
@@ -592,6 +598,137 @@
       (netpbm:write-to-file path image
                             :if-exists :supersede
                             :format :pbm))))
+
+
+(defun gethash-arbitrary (hash-table)
+  (maphash (lambda (k v)
+             (return-from gethash-arbitrary (values k v t)))
+           hash-table)
+  (values nil nil nil))
+
+(defun pophash (hash-table &optional (key nil key?))
+  (multiple-value-bind (k v found) (if key?
+                                     (multiple-value-bind (v found)
+                                         (gethash key hash-table)
+                                       (values key v found))
+                                     (gethash-arbitrary hash-table))
+    (if found
+      (progn (remhash k hash-table)
+             (values k v t))
+      (values nil nil nil))))
+
+
+(defun ensure-edge (digraph pred succ)
+  (digraph:insert-vertex digraph pred)
+  (digraph:insert-vertex digraph succ)
+  (digraph:insert-edge digraph pred succ))
+
+
+(defun bisect-integers-left (predicate low high)
+  "Bisect the integers `[low, high]` with `predicate` and return the LEFT element.
+
+  You can think of this function as partitioning the integers from `low` to
+  `high` (inclusive) into two halves: those that satisfy `(predicate x)` and
+  those that don't, and then selecting the element on the LEFT side of the
+  split:
+
+     satisfying  not statisfying
+    [..........  ...............]
+              ^
+              |
+         result
+
+  If no integers in the range satisfy the predicate, `nil` will be returned.
+
+  Examples:
+
+    (bisect-integers-left (lambda (x) (< x 3)) 0 9) ; => 2
+    ;  sat not-sat
+    ; [012|345789]
+    ;    ^
+    ;    result
+
+    (bisect-integers-left (lambda (x) (<= x 7)) 0 9) ; => 7
+    ;  sat     not-sat
+    ; [0123457|89]
+    ;        ^
+    ;        result
+
+    (bisect-integers-left (lambda (x) (<= x 100)) 0 9) ; => 9
+    ;  sat       not-sat
+    ; [012345789|]
+    ;          ^
+    ;        result
+
+    (bisect-integers-left (lambda (x) (< x -1)) 0 9) ; => nil
+    ; sat not-sat
+    ;   [|012345789]
+    ; no result
+
+  "
+  (assert (<= low high))
+  (when (funcall predicate low)
+    (recursively ((low low)
+                  (high high))
+      (if (= low high)
+        low
+        (let ((mid (+ low (ceiling (- high low) 2))))
+          (if (funcall predicate mid)
+            (recur mid high)
+            (recur low (1- mid))))))))
+
+(defun bisect-integers-right (predicate low high)
+  "Bisect the integers `[low, high]` with `predicate` and return the RIGHT element.
+
+  You can think of this function as partitioning the integers from `low` to
+  `high` (inclusive) into two halves: those that satisfy `(predicate x)` and
+  those that don't, and then selecting the element on the RIGHT side of the
+  split:
+
+     satisfying  not statisfying
+    [..........  ...............]
+                 ^
+                 |
+            result
+
+  If all integers in the range satisfy the predicate, `nil` will be returned.
+
+  Examples:
+
+    (bisect-integers-right (lambda (x) (< x 3)) 0 9) ; => 3
+    ;  sat not-sat
+    ; [012|345789]
+    ;      ^
+    ;      result
+
+    (bisect-integers-right (lambda (x) (<= x 7)) 0 9) ; => 8
+    ;  sat     not-sat
+    ; [0123457|89]
+    ;          ^
+    ;          result
+
+    (bisect-integers-right (lambda (x) (< x -1)) 0 9) ; => 0
+    ; sat not-sat
+    ;   [|012345789]
+    ;     ^
+    ;     result)
+
+    (bisect-integers-right (lambda (x) (<= x 100)) 0 9) ; => nil
+    ;  sat       not-sat
+    ; [012345789|]
+    ;            no result
+
+  "
+  (assert (<= low high))
+  (when (not (funcall predicate high))
+    (recursively ((low low)
+                  (high high))
+      (if (= low high)
+        low
+        (let ((mid (+ low (floor (- high low) 2))))
+          (if (funcall predicate mid)
+            (recur (1+ mid) high)
+            (recur low mid)))))))
 
 
 ;;;; A* Search ----------------------------------------------------------------

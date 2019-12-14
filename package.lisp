@@ -69,6 +69,16 @@
 
     :astar
 
+    :defpackage*
+
+    :gethash-arbitrary
+    :pophash
+
+    :ensure-edge
+
+    :bisect-integers-left
+    :bisect-integers-right
+
     ))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
