@@ -755,6 +755,55 @@
             (recur low mid)))))))
 
 
+(defun print-hash-table-map (table &key
+                             flip-y
+                             get
+                             (pad 0)
+                             (default #\space)
+                             (key #'identity))
+  "Print `table` to standard out.
+
+  `table` must be a hash table with complex keys.  `default` will be used as the
+  default value for the hash table.  `key` will be called on the values before
+  printing (including `default`), and must return a character.
+
+  If `get` is provided, it must be a function of one argument that will be
+  called on the keys instead of `(gethash ... table default)` to produce the
+  values.  `key` will still be called on the result.
+
+  The y-axis will be printed with higher values at the top, unless `flip-y` is
+  true.
+
+  "
+  (multiple-value-bind (left right bottom top)
+      (bounds (alexandria:hash-table-keys table))
+    (incf left (- pad))
+    (incf right pad)
+    (incf bottom (- pad))
+    (incf top pad)
+    (do-irange ((y (if flip-y bottom top)
+                   (if flip-y top bottom)))
+      (do-irange ((x left right))
+        (princ (funcall key (if get
+                              (funcall get (complex x y))
+                              (gethash (complex x y) table default)))))
+      (terpri))))
+
+(defun esc (string)
+  (format t "~C~A" #\esc string)
+  (force-output))
+
+(defun clear ()
+  (esc "[2J")
+  (esc "[;H"))
+
+(defun green ()
+  (esc "[32m"))
+
+(defun reset ()
+  (esc "[0m"))
+
+
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path
   state

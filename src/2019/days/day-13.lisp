@@ -39,31 +39,13 @@
                                 :score score)))))
     (values screen score)))
 
-(defun esc (string)
-  (format t "~C~A" #\esc string)
-  (force-output))
-
-(defun clear ()
-  (esc "[2J")
-  (esc "[;H"))
-
-(defun green ()
-  (esc "[32m"))
-
-(defun reset ()
-  (esc "[0m"))
 
 (defun draw-screen (update)
   (clear)
   (green)
   (format t "SCORE: ~D~%" (score update))
   (reset)
-  (multiple-value-bind (left right bottom top)
-      (bounds (hash-table-keys (screen update)))
-    (do-irange ((row bottom top))
-      (do-irange ((col left right))
-        (write-char (tile-char (gethash (complex col row) (screen update)))))
-      (terpri))))
+  (print-hash-table-map (screen update) :key #'tile-char :default nil :flip-y t))
 
 (defun play-interactively (program)
   (setf (elt program 0) 2)
@@ -100,3 +82,4 @@
 #; Scratch --------------------------------------------------------------------
 
 (play-interactively *data*)
+

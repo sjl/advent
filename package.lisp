@@ -80,6 +80,12 @@
     :bisect-integers-left
     :bisect-integers-right
 
+    :print-hash-table-map
+
+    :clear
+    :green
+    :reset
+
     ))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

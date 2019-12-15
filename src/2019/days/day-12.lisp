@@ -1,4 +1,4 @@
-(defpackage :advent/2019/12 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/12)
 (in-package :advent/2019/12)
 
 (defclass* moon () (pos vel))

@@ -1,16 +1,6 @@
 (defpackage :advent/2019/03 #.cl-user::*advent-use*)
 (in-package :advent/2019/03)
 
-(defun print-grid (grid)
-  (multiple-value-bind (left right bottom top)
-      (bounds (alexandria:hash-table-keys grid))
-    (iterate
-      (for y :from (1+ top) :downto (1- bottom))
-      (iterate
-        (for x :from (1- left) :to (1+ right))
-        (princ (gethash (complex x y) grid #\.)))
-      (terpri))))
-
 (defun parse-path (string)
   (iterate
     (for ((#'first-character direction) (#'parse-integer distance))
@@ -62,11 +52,15 @@
     (flet ((intersection-cost (point)
              (+ (gethash point scores1)
                 (gethash point scores2))))
+      ;; (print-hash-table-map grid :default #\. :pad 1)
       (values
         (alexandria:extremum (mapcar #'manhattan-distance intersections) #'<)
         (alexandria:extremum (mapcar #'intersection-cost intersections) #'<)))))
 
-;; (run '("R8,U5,L5,D3" "U7,R6,D4,L4"))
+#; Scratch --------------------------------------------------------------------
+
+(run '("R8,U5,L5,D3" "U7,R6,D4,L4"))
+
 ;; (run '(
 ;; "R75,D30,R83,U83,L12,D49,R71,U7,L72"
 ;; "U62,R66,U55,R34,D71,R55,D58,R83"
