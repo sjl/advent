@@ -33,6 +33,7 @@
     :y
     :nth-digit
     :unique
+    :positions
     :positions-if
     :digits
     :fresh-vector

@@ -479,6 +479,30 @@
                       :key key
                       :initial-value nil))))
 
+(defun positions (item sequence &key (start 0) end key (test #'eql))
+  "Return a fresh list of all positions of `item` in `sequence`.
+
+  Like `cl:position`, but returns a list of all the results.
+
+  Example:
+
+    (positions 3 #(\"foo\" \"a\" \"b\" \"bar\") :key #'length)
+    ; =>
+    (0 3)
+
+  "
+  (let ((pos start))
+    (nreverse (reduce (lambda (result value)
+                        (prog1 (if (funcall test item value)
+                                 (cons pos result)
+                                 result)
+                          (incf pos)))
+                      sequence
+                      :start start
+                      :end end
+                      :key key
+                      :initial-value nil))))
+
 
 (defun digits (n &key (radix 10) from-end (result-type 'list))
   "Return a fresh list of the digits of `n` in base `radix`.

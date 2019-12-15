@@ -2,7 +2,7 @@
 ;;;; See http://quickutil.org for details.
 
 ;;;; To regenerate:
-;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM :EQUIVALENCE-CLASSES :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :REMOVEF :SYMB :WITH-GENSYMS) :ensure-package T :package "ADVENT.QUICKUTILS")
+;;;; (qtlc:save-utils-as "quickutils.lisp" :utilities '(:COMPOSE :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EQUIVALENCE-CLASSES :EXTREMUM :FLATTEN-ONCE :HASH-TABLE-KEYS :HASH-TABLE-VALUES :ONCE-ONLY :RCURRY :READ-FILE-INTO-STRING :REMOVEF :SYMB :TREE-COLLECT :WITH-GENSYMS) :ensure-package T :package "ADVENT.QUICKUTILS")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package "ADVENT.QUICKUTILS")
@@ -14,11 +14,11 @@
 
 (when (boundp '*utilities*)
   (setf *utilities* (union *utilities* '(:MAKE-GENSYM-LIST :ENSURE-FUNCTION :COMPOSE
-                                         :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH :EXTREMUM
-                                         :EQUIVALENCE-CLASSES :FLATTEN-ONCE :MAPHASH-KEYS
+                                         :COPY-HASH-TABLE :CURRY :DELETEF :ENSURE-GETHASH
+                                         :EQUIVALENCE-CLASSES :EXTREMUM :FLATTEN-ONCE :MAPHASH-KEYS
                                          :HASH-TABLE-KEYS :MAPHASH-VALUES :HASH-TABLE-VALUES
                                          :ONCE-ONLY :RCURRY :WITH-OPEN-FILE* :WITH-INPUT-FROM-FILE
-                                         :READ-FILE-INTO-STRING :REMOVEF :MKSTR :SYMB
+                                         :READ-FILE-INTO-STRING :REMOVEF :MKSTR :SYMB :TREE-COLLECT
                                          :STRING-DESIGNATOR :WITH-GENSYMS))))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-gensym-list (length &optional (x "G"))
@@ -136,6 +136,32 @@ already in the table."
            (values (setf (gethash ,key ,hash-table) ,default) nil))))
   
 
+  (defun equivalence-classes (equiv seq)
+    "Partition the sequence `seq` into a list of equivalence classes
+defined by the equivalence relation `equiv`."
+    (let ((classes nil))
+      (labels ((find-equivalence-class (x)
+                 (member-if (lambda (class)
+                              (funcall equiv x (car class)))
+                            classes))
+               
+               (add-to-class (x)
+                 (let ((class (find-equivalence-class x)))
+                   (if class
+                       (push x (car class))
+                       (push (list x) classes)))))
+        (declare (dynamic-extent (function find-equivalence-class)
+                                 (function add-to-class))
+                 (inline find-equivalence-class
+                         add-to-class))
+        
+        ;; Partition into equivalence classes.
+        (map nil #'add-to-class seq)
+        
+        ;; Return the classes.
+        classes)))
+  
+
   (defun extremum (sequence predicate &key key (start 0) end)
     "Returns the element of `sequence` that would appear first if the subsequence
 bounded by `start` and `end` was sorted using `predicate` and `key`.
@@ -178,32 +204,6 @@ If `sequence` is empty, `nil` is returned."
                     (length sequence)
                     :start start
                     :end end)))))
-  
-
-  (defun equivalence-classes (equiv seq)
-    "Partition the sequence `seq` into a list of equivalence classes
-defined by the equivalence relation `equiv`."
-    (let ((classes nil))
-      (labels ((find-equivalence-class (x)
-                 (member-if (lambda (class)
-                              (funcall equiv x (car class)))
-                            classes))
-               
-               (add-to-class (x)
-                 (let ((class (find-equivalence-class x)))
-                   (if class
-                       (push x (car class))
-                       (push (list x) classes)))))
-        (declare (dynamic-extent (function find-equivalence-class)
-                                 (function add-to-class))
-                 (inline find-equivalence-class
-                         add-to-class))
-        
-        ;; Partition into equivalence classes.
-        (map nil #'add-to-class seq)
-        
-        ;; Return the classes.
-        classes)))
   
 
   (defun flatten-once (list)
@@ -379,6 +379,25 @@ See also: `symbolicate`"
     (values (intern (apply #'mkstr args))))
   
 
+  (defun tree-collect (predicate tree)
+    "Returns a list of every node in the `tree` that satisfies the `predicate`. If there are any improper lists in the tree, the `predicate` is also applied to their dotted elements."
+    (let ((sentinel (gensym)))
+      (flet ((my-cdr (obj)
+               (cond ((consp obj)
+                      (let ((result (cdr obj)))
+                        (if (listp result)
+                            result
+                            (list result sentinel))))
+                     (t
+                      (list sentinel)))))
+        (loop :for (item . rest) :on tree :by #'my-cdr
+              :until (eq item sentinel)
+              :if (funcall predicate item) collect item
+                :else
+                  :if (listp item)
+                    :append (tree-collect predicate item)))))
+  
+
   (deftype string-designator ()
     "A string designator type. A string designator is either a string, a symbol,
 or a character."
@@ -423,8 +442,8 @@ unique symbol the named variable will be bound to."
     `(with-gensyms ,names ,@forms))
   
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (export '(compose copy-hash-table curry deletef ensure-gethash extremum equivalence-classes
+  (export '(compose copy-hash-table curry deletef ensure-gethash equivalence-classes extremum
             flatten-once hash-table-keys hash-table-values once-only rcurry read-file-into-string
-            removef symb with-gensyms with-unique-names)))
+            removef symb tree-collect with-gensyms with-unique-names)))
 
 ;;;; END OF quickutils.lisp ;;;;

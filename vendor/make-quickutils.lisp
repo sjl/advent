@@ -9,8 +9,8 @@
                :curry
                :deletef
                :ensure-gethash
-               :extremum
                :equivalence-classes
+               :extremum
                :flatten-once
                :hash-table-keys
                :hash-table-values
@@ -19,6 +19,7 @@
                :read-file-into-string
                :removef
                :symb
+               :tree-collect
                :with-gensyms
 
                )
