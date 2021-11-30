@@ -1,4 +1,4 @@
-(defpackage :advent/2017/16 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/16)
 (in-package :advent/2017/16)
 
 (defparameter *initial* "abcdefghijklmnop")

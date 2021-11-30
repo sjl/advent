@@ -1,4 +1,4 @@
-(defpackage :advent/2017/11 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/11)
 (in-package :advent/2017/11)
 
 ;; https://www.redblobgames.com/grids/hexagons/#coordinates

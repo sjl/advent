@@ -1,4 +1,4 @@
-(defpackage :advent/2019/09 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/09)
 (in-package :advent/2019/09)
 
 (define-problem (2019 9) (data read-numbers) (2955820355 46643)

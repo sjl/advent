@@ -1,4 +1,4 @@
-(defpackage :advent/2019/04 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/04)
 (in-package :advent/2019/04)
 
 (defun nondecreasing-digits-p (n)

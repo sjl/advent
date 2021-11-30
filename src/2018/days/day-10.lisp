@@ -1,4 +1,4 @@
-(defpackage :advent/2018/10 #.cl-user::*advent-use*
+(advent:defpackage* :advent/2018/10
   (:shadow :x :y :bounds))
 (in-package :advent/2018/10)
 

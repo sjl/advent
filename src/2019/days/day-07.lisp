@@ -1,4 +1,4 @@
-(defpackage :advent/2019/07 #.cl-user::*advent-use*
+(advent:defpackage* :advent/2019/07
   (:shadow :queue))
 (in-package :advent/2019/07)
 
@@ -26,12 +26,12 @@
 
 (defun run-amplifiers (program phases)
   (multiple-value-bind (amplifiers queue) (make-amplifiers program phases)
-    (-<> amplifiers
+    (_ amplifiers
       (mapcar (lambda (amp)
                 (bt:make-thread (curry #'advent/intcode:run-machine amp)
                                 :name "Amplifier Thread"))
-              <>)
-      (map nil #'bt:join-thread <>))
+              _)
+      (map nil #'bt:join-thread _))
     (jpl-queues:dequeue queue)))
 
 (defun maximum-permutation (function sequence)
@@ -60,8 +60,8 @@
        -1 56 1005 56 6 99 0 0 0 0 10))
 
 (defun kill-amplifiers ()
-  (-<> (bt:all-threads)
-    (remove "Amplifier Thread" <> :test-not #'string= :key #'bt:thread-name)
-    (map nil #'bt:destroy-thread <>)))
+  (_ (bt:all-threads)
+    (remove "Amplifier Thread" _ :test-not #'string= :key #'bt:thread-name)
+    (map nil #'bt:destroy-thread _)))
 
 (kill-amplifiers)

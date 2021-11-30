@@ -1,4 +1,4 @@
-(defpackage :advent/2018/05 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/05)
 (in-package :advent/2018/05)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -14,7 +14,7 @@
 
 (define-problem (2018 5) (data alexandria:read-stream-content-into-string)
     (10708 5330)
-  (deletef data #\newline)
+  (setf data (delete #\newline data))
   (values
     (length (react data))
     (iterate

@@ -1,5 +1,4 @@
-(defpackage :advent/intcode
-  #.cl-user::*advent-use*
+(advent:defpackage* :advent/intcode
   (:shadow :step :trace)
   (:export :init :step :run :run-machine :*trace*))
 
@@ -175,9 +174,9 @@
         (return)
         (decf limit)))
     (with address = start)
-    (with addresses = (-<> (memory machine)
+    (with addresses = (_ (memory machine)
                         alexandria:hash-table-keys
-                        (sort <> #'<)))
+                        (sort _ #'<)))
     (with bound = (1+ (elt addresses (1- (length addresses)))))
     (flet ((advance (addr)
              (iterate

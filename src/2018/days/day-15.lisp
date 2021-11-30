@@ -1,4 +1,4 @@
-(defpackage :advent/2018/15 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/15)
 (in-package :advent/2018/15)
 
 ;;;; Points -------------------------------------------------------------------
@@ -137,21 +137,21 @@
                  (neighbors p)))
 
 (defun adjacent-enemies (mob)
-  (-<> mob
+  (_ mob
     loc/p
     neighbors
-    (mapcar #'loc <>)
-    (remove nil <>)
-    (remove-if-not (curry #'enemiesp mob) <>)))
+    (mapcar #'loc _)
+    (remove nil _)
+    (remove-if-not (curry #'enemiesp mob) _)))
 
 (defun adjacent-enemy (mob)
   (first (sort (adjacent-enemies mob) #'loc<)))
 
 (defun target-squares (unit)
-  (-<> unit
+  (_ unit
     targets
-    (mapcan (compose #'open-neighbors #'loc/p) <>)
-    (remove-duplicates <> :test #'=)))
+    (mapcan (compose #'open-neighbors #'loc/p) _)
+    (remove-duplicates _ :test #'=)))
 
 
 (defun step-cost (start from to)
@@ -217,7 +217,7 @@
 
 ;;;; World Generation ---------------------------------------------------------
 (defun generate-world (lines)
-  (removef lines "" :test #'string=)
+  (alexandria:removef lines "" :test #'string=)
   (beast:clear-entities)
   (let* ((rows (length lines))
          (cols (length (first lines))))

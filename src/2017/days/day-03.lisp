@@ -1,4 +1,4 @@
-(defpackage :advent/2017/03 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/03)
 (in-package :advent/2017/03)
 
 

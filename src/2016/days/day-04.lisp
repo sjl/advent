@@ -1,4 +1,4 @@
-(defpackage :advent/2016/04 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/04)
 (in-package :advent/2016/04)
 
 (defun sort-predicate (a b)
@@ -9,21 +9,21 @@
             (t (char< ach bch))))))
 
 (defun checksum (name)
-  (-<> name
-    (remove #\- <>)
+  (_ name
+    (remove #\- _)
     frequencies
     alexandria:hash-table-alist
-    (sort <> #'sort-predicate)
-    (take 5 <>)
-    (map 'string #'car <>)))
+    (sort _ #'sort-predicate)
+    (take 5 _)
+    (map 'string #'car _)))
 
 (defun rot (char n)
-  (-<> char
+  (_ char
     char-code
-    (- <> (char-code #\a))
-    (+ <> n)
-    (mod <> 26)
-    (+ <> (char-code #\a))
+    (- _ (char-code #\a))
+    (+ _ n)
+    (mod _ 26)
+    (+ _ (char-code #\a))
     code-char))
 
 (defun decrypt-char (char id)

@@ -1,8 +1,12 @@
 (advent:defpackage* :advent/2019/14)
 (in-package :advent/2019/14)
 
+(defun chem-symbol (name)
+  (let ((*package* (find-package :advent/2019/14)))
+    (symb name)))
+
 (defun parse-chem (chemicals)
-  (iterate (for ((#'parse-integer amount) (#'symb name))
+  (iterate (for ((#'parse-integer amount) (#'chem-symbol name))
                 :matching "(\\d+) (\\w+)" :against chemicals)
            (collect (cons name amount))))
 

@@ -1,4 +1,4 @@
-(defpackage :advent/2017/04 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/04)
 (in-package :advent/2017/04)
 
 (defun valid-hash-table-test-p (test)

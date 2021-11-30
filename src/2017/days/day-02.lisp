@@ -1,4 +1,4 @@
-(defpackage :advent/2017/02 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/02)
 (in-package :advent/2017/02)
 
 (defun find-quotient (row)

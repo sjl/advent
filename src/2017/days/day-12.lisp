@@ -1,4 +1,4 @@
-(defpackage :advent/2017/12 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/12)
 (in-package :advent/2017/12)
 
 (defun parse-line (line)

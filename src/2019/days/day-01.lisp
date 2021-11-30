@@ -1,4 +1,4 @@
-(defpackage :advent/2019/01 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/01)
 (in-package :advent/2019/01)
 
 
@@ -15,3 +15,7 @@
   (values (summation data :key #'fuel-required)
           (summation data :key #'complete-fuel-required)))
 
+;# Scratch --------------------------------------------------------------------
+
+;; (run)
+;; (1am:run)

@@ -1,4 +1,4 @@
-(defpackage :advent/2018/04 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/04)
 (in-package :advent/2018/04)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -34,17 +34,17 @@
   (iterate
     (with result = (make-hash-table))
     (for (guard start end) :in intervals)
-    (for histogram = (ensure-gethash guard result
-                                     (make-array 60 :initial-element 0)))
+    (for histogram = (alexandria:ensure-gethash guard result
+                       (make-array 60 :initial-element 0)))
     (do-range ((minute start end))
       (incf (aref histogram minute)))
     (finally (return result))))
 
 
 (define-problem (2018 4) (data read-lines) (143415 49944)
-  (let ((guard-histograms (-<> data
-                            (sort <> #'string<)
-                            (mapcar #'parse-line <>)
+  (let ((guard-histograms (_ data
+                            (sort _ #'string<)
+                            (mapcar #'parse-line _)
                             sleep-intervals
                             guard-histograms)))
     (nest

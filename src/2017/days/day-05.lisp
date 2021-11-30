@@ -1,4 +1,4 @@
-(defpackage :advent/2017/05 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/05)
 (in-package :advent/2017/05)
 
 (defun compute (data modification-function)

@@ -1,4 +1,4 @@
-(defpackage :advent/2016/08 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/08)
 (in-package :advent/2016/08)
 
 (defun make-screen ()

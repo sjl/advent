@@ -1,4 +1,4 @@
-(defpackage :advent/2018/07 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/07)
 (in-package :advent/2018/07)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -10,7 +10,9 @@
     (list target requirement)))
 
 (defun make-graph (edges)
-  (let* ((vertices (remove-duplicates (flatten-once edges)))
+  (let* ((vertices (remove-duplicates (loop :for edge :in edges
+                                            :if (listp edge) :append edge
+                                            :else :collect edge)))
          (graph (digraph:make-digraph :initial-vertices vertices)))
     (dolist (edge edges)
       (digraph:insert-edge graph (first edge) (second edge)))
@@ -38,7 +40,7 @@
       (recursively ((result nil))
         (if (emptyp graph)
           (coerce (nreverse result) 'string)
-          (let ((next (extremum (digraph:leafs graph) 'char<)))
+          (let ((next (alexandria:extremum (digraph:leafs graph) 'char<)))
             (digraph:remove-vertex graph next)
             (recur (cons next result))))))
     (iterate
@@ -49,10 +51,10 @@
       (for finished-tasks = (decrement-workers workers))
       (map nil (curry #'digraph:remove-vertex graph) finished-tasks)
       (for current-tasks = (remove nil (map 'list #'car workers)))
-      (for available-tasks = (-<> graph
+      (for available-tasks = (_ graph
                                digraph:leafs
-                               (set-difference <> current-tasks)
-                               (sort <> 'char<)))
+                               (set-difference _ current-tasks)
+                               (sort _ 'char<)))
       (do-array (worker workers)
         (when (null worker)
           (when-let ((task (pop available-tasks)))

@@ -1,4 +1,4 @@
-(defpackage :advent/2019/03 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/03)
 (in-package :advent/2019/03)
 
 (defun parse-path (string)

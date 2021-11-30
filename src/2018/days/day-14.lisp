@@ -1,4 +1,4 @@
-(defpackage :advent/2018/14 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/14)
 (in-package :advent/2018/14)
 
 (defun combine (recipes elves)
@@ -10,7 +10,7 @@
                    (length recipes)))))
 
 (defun format-output (scores)
-  (str:join "" (coerce scores 'list)))
+  (str:join "" (map 'list #'aesthetic-string scores)))
 
 (define-problem (2018 14) (data read) ("3610281143" 20211326)
   #+sbcl (sb-ext:gc :full t)

@@ -33,11 +33,11 @@
 (defun print-world (machine)
   (print-hash-table-map
     (world machine)
+    :default #\space
     :pad 1
-    :get (lambda (pos)
-           (if (= (pos machine) pos)
-             #\@
-             (gethash pos (world machine) #\space)))))
+    :extra (lambda (pos)
+             (when (= (pos machine) pos)
+               #\@))))
 
 (defun dir->int (dir)
   (ecase dir

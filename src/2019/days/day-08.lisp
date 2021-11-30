@@ -1,4 +1,4 @@
-(defpackage :advent/2019/08 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/08)
 (in-package :advent/2019/08)
 
 (defun read-layer (stream width height)

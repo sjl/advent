@@ -39,10 +39,7 @@
                )
 
   :serial t
-  :components ((:module "vendor" :serial t
-                :components ((:file "quickutils-package")
-                             (:file "quickutils")))
-               (:file "package")
+  :components ((:file "package")
                (:module "src" :serial t
                 :components ((:file "utils")
                              (:module "2016" :serial t

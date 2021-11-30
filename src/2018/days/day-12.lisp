@@ -1,4 +1,4 @@
-(defpackage :advent/2018/12 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/12)
 (in-package :advent/2018/12)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -58,10 +58,10 @@
   (ppcre:register-groups-bind
       (state)
       (#?r"initial state: (\S+)" line)
-    (-<> state
+    (_ state
       runes-to-bits
-      (positions-if #'plusp <>)
-      (make-hash-set :initial-contents <>))))
+      (positions-if #'plusp _)
+      (make-hash-set :initial-contents _))))
 
 (defun parse-rule (line)
   (ppcre:register-groups-bind

@@ -1,5 +1,5 @@
 (defpackage :advent
-  (:use :cl :losh :iterate :advent.quickutils)
+  (:use :cl :losh :iterate)
   (:export
     :define-problem
 
@@ -13,6 +13,7 @@
     :read-2d-array
     :read-before
     :read-to
+    :read-digits
 
     :ensure-string
     :ensure-stream
@@ -29,6 +30,7 @@
     :integral-range
     :manhattan-distance
     :manhattan-neighbors
+    :manhattan-neighborhood
     :x
     :y
     :nth-digit
@@ -36,6 +38,7 @@
     :positions
     :positions-if
     :digits
+    :digits-to-number
     :fresh-vector
     :first-character
     :let-result
@@ -88,5 +91,3 @@
 
     ))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *advent-use* '(:use :cl :losh :iterate :advent :advent.quickutils)))

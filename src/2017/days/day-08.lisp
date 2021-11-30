@@ -1,4 +1,4 @@
-(defpackage :advent/2017/08 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/08)
 (in-package :advent/2017/08)
 
 (defun == (x y) (= x y))

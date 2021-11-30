@@ -1,4 +1,4 @@
-(defpackage :advent/2018/09 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/09)
 (in-package :advent/2018/09)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -23,7 +23,7 @@
                (ring-cutf circle))
         (progn (ring-movef circle 1)
                (ring-insertf-after circle marble))))
-    (extremum elves '>)))
+    (alexandria:extremum elves '>)))
 
 
 (define-problem (2018 9) (data alexandria:read-stream-content-into-string)

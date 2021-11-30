@@ -1,5 +1,5 @@
 (defpackage :advent/spiral
-  (:use :cl :losh :iterate :advent.quickutils)
+  (:use :cl :losh :iterate)
   (:export :number-coordinates))
 
 (in-package :advent/spiral)

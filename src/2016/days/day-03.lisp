@@ -1,4 +1,4 @@
-(defpackage :advent/2016/03 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/03)
 (in-package :advent/2016/03)
 
 (defun validp (a b c)

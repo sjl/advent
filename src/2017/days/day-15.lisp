@@ -1,4 +1,4 @@
-(defpackage :advent/2017/15 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/15)
 (in-package :advent/2017/15)
 
 (defun-inline gen (previous factor)

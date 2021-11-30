@@ -1,4 +1,4 @@
-(defpackage :advent/2017/07 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/07)
 (in-package :advent/2017/07)
 (named-readtables:in-readtable :interpol-syntax)
 

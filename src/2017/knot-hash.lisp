@@ -1,5 +1,4 @@
-(defpackage :advent/knot-hash
-  #.cl-user::*advent-use*
+(advent:defpackage* :advent/knot-hash
   (:export :simple-knot-hash :full-knot-hash))
 
 (in-package :advent/knot-hash)

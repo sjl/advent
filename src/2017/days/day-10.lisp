@@ -1,4 +1,4 @@
-(defpackage :advent/2017/10 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/10)
 (in-package :advent/2017/10)
 
 (define-problem (2017 10) (data alexandria:read-stream-content-into-string)

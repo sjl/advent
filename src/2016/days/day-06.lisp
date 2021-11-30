@@ -1,4 +1,4 @@
-(defpackage :advent/2016/06 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/06)
 (in-package :advent/2016/06)
 
 (defun freqs (lines)

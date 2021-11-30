@@ -1,4 +1,4 @@
-(defpackage :advent/2017/18 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/18)
 (in-package :advent/2017/18)
 
 (defclass* machine ()
@@ -22,7 +22,7 @@
     (number register-or-constant)))
 
 (defmacro opcase (op &body clauses)
-  (alexandria:once-only (op)
+  (once-only (op)
     `(case (first ,op)
        ,@(iterate
           (for ((opcode . args) . body) :in clauses)

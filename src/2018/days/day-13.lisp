@@ -1,4 +1,4 @@
-(defpackage :advent/2018/13 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/13)
 (in-package :advent/2018/13)
 
 ;;;; Cart ---------------------------------------------------------------------
@@ -124,8 +124,8 @@
     (t cart-or-track-rune)))
 
 (defun parse-track (lines)
-  (removef lines "" :test #'string=)
-  (let ((track (make-array (list (extremum (mapcar #'length lines) '>)
+  (alexandria:removef lines "" :test #'string=)
+  (let ((track (make-array (list (alexandria:extremum (mapcar #'length lines) '>)
                                  (length lines))
                  :element-type 'character
                  :initial-element #\space))
@@ -169,7 +169,7 @@
         (and (= y1 y2) (< x1 x2))))) ; or further left
 
 (defun tick-carts (track carts)
-  (dolist (cart (sort (hash-table-values carts) #'cart<))
+  (dolist (cart (sort (alexandria:hash-table-values carts) #'cart<))
     (tick-cart track carts cart)))
 
 
@@ -199,7 +199,7 @@
         (for tick :from 1)
         (for carts-remaining = (hash-table-count carts))
         (finding
-          (-<> carts hash-table-values first cart-position format-position)
+          (_ carts alexandria:hash-table-values first cart-position format-position)
           :such-that (= 1 carts-remaining))))))
 
 (define-problem (2018 13) (data read-lines) ("83,49" "73,36")

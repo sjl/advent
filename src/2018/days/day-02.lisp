@@ -1,11 +1,11 @@
-(defpackage :advent/2018/02 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/02)
 (in-package :advent/2018/02)
 
 
 (define-problem (2018 2) (data read-lines) (8296 "pazvmqbftrbeosiecxlghkwud")
   (values
     (let* ((freqs (mapcar #'frequencies data))
-           (counts (mapcar #'hash-table-values freqs)))
+           (counts (mapcar #'alexandria:hash-table-values freqs)))
       (* (count 2 counts :test #'member)
          (count 3 counts :test #'member)))
     ;; just brute force it

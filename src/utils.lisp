@@ -32,9 +32,6 @@
       (symbol (alexandria:make-keyword input))
       (string (alexandria:make-keyword (string-upcase (str:trim input)))))))
 
-(defun ensure-list (input)
-  (if (listp input) input (list input)))
-
 
 ;;;; Problems -----------------------------------------------------------------
 (defmacro define-problem-tests ((year day) part1 part2)
@@ -48,7 +45,7 @@
 
 (defmacro define-problem ((year day)
                           (arg &optional (reader 'identity))
-                          (&optional answer1 answer2)
+                          (&optional part-1-answer part-2-answer)
                           &body body)
   (multiple-value-bind (body declarations docstring)
       (alexandria:parse-body body :documentation t)
@@ -64,8 +61,8 @@
                             (setf ,arg (,reader (ensure-stream (or ,arg ,file)))))
                           ,@body)
                  (when ,file (close ,file)))))
-           ,@(when answer1
-               (list `(define-problem-tests (,year ,day) ,answer1 ,answer2)))
+           ,@(when part-1-answer
+               (list `(define-problem-tests (,year ,day) ,part-1-answer ,part-2-answer)))
            'run)))))
 
 (defun problem-data-path (year day)
@@ -77,7 +74,7 @@
 
 (defmacro defpackage* (name &body body)
   `(defpackage ,name
-     (:use :cl :losh :iterate :advent :advent.quickutils)
+     (:use :cl :losh :iterate :advent)
      ,@body))
 
 
@@ -140,6 +137,7 @@
 (defun read-all (stream)
   "Read all forms from `stream` and return them as a fresh list."
   (read-and-collect stream #'read))
+
 (defun read-numbers (stream)
   (read-numbers-from-string (alexandria:read-stream-content-into-string stream)))
 
@@ -178,6 +176,12 @@
       (for char :in-string line)
       (setf (aref result row col) char))
     (returning result)))
+
+(defun read-digits (stream)
+  (iterate (for char :in-stream stream :using #'read-char)
+           (for digit = (digit-char-p char))
+           (when digit
+             (collect digit))))
 
 
 ;;;; Rings --------------------------------------------------------------------
@@ -415,6 +419,14 @@
         (+ point #c(0 -1))
         (+ point #c(-1 0))))
 
+(defun manhattan-neighborhood (point)
+  "Return point and points adjacent to point (excluding diagonals) on the complex plane."
+  (list point
+        (+ point #c(0 1))
+        (+ point #c(1 0))
+        (+ point #c(0 -1))
+        (+ point #c(-1 0))))
+
 
 (defgeneric emptyp (collection)
   (:documentation "Return whether `collection` is empty."))
@@ -523,6 +535,22 @@
               result
               (nreverse result))
             result-type)))
+
+(defun digits-to-number (digits &key from-end (radix 10))
+  "Concatenate `digits` to return an integer in base `radix`.
+
+  If `from-end` is `t`, start at the end of the list.
+
+  "
+  (if digits
+    (if from-end
+      (iterate (for d :in digits)
+               (for multiplier :first 1 :then (* radix multiplier))
+               (summing (* multiplier d)))
+      (reduce (lambda (total digit)
+                (+ (* total radix) digit))
+              digits))
+    0))
 
 
 (defun fresh-vector (sequence)
@@ -756,8 +784,10 @@
 
 
 (defun print-hash-table-map (table &key
+                             flip-x
                              flip-y
-                             get
+                             swap-axes
+                             extra
                              (pad 0)
                              (default #\space)
                              (key #'identity))
@@ -781,12 +811,16 @@
     (incf right pad)
     (incf bottom (- pad))
     (incf top pad)
-    (do-irange ((y (if flip-y bottom top)
-                   (if flip-y top bottom)))
+    (when flip-x (rotatef left right))
+    (when flip-y (rotatef bottom top))
+    (do-irange ((y top bottom))
       (do-irange ((x left right))
-        (princ (funcall key (if get
-                              (funcall get (complex x y))
-                              (gethash (complex x y) table default)))))
+        (let ((pos (if swap-axes
+                     (complex y x)
+                     (complex x y))))
+          (princ (funcall key (or (when extra
+                                    (funcall extra pos))
+                                  (gethash pos table default))))))
       (terpri))))
 
 (defun esc (string)

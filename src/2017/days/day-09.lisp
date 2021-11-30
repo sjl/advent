@@ -1,4 +1,4 @@
-(defpackage :advent/2017/09 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/09)
 (in-package :advent/2017/09)
 
 (define-problem (2017 9) (stream) (15922 7314)

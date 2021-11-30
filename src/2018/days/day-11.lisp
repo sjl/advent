@@ -1,4 +1,4 @@
-(defpackage :advent/2018/11 #.cl-user::*advent-use*
+(advent:defpackage* :advent/2018/11
   (:shadow :x :y))
 (in-package :advent/2018/11)
 
@@ -15,12 +15,12 @@
   (+ (x cell) 10))
 
 (defun power-level (serial-number cell)
-  (-<> (rack-id cell)
-    (* <> (y cell))
-    (+ <> serial-number)
-    (* <> (rack-id cell))
-    (nth-digit 2 <>)
-    (- <> 5)))
+  (_ (rack-id cell)
+    (* _ (y cell))
+    (+ _ serial-number)
+    (* _ (rack-id cell))
+    (nth-digit 2 _)
+    (- _ 5)))
 
 (define-problem (2018 11) (serial-number read) ("245,14" "235,206,13")
   (let ((totals (make-array (list 300 300))))
@@ -52,7 +52,8 @@
                                 (y :from 1 :to (- 301 n))))
                    (for power = (square-power x y n))
                    (finding (list x y power) :maximizing power))))
-        (values (str:join "," (subseq (largest-square 3) 0 2))
+        (values (str:join "," (mapcar #'aesthetic-string
+                                      (subseq (largest-square 3) 0 2)))
                 (iterate (for n :from 1 :to 300)
                          (for (x y power) = (largest-square n))
                          (finding (format nil "~D,~D,~D" x y n)

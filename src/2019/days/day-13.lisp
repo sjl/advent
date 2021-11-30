@@ -73,9 +73,9 @@
 
 (defvar *data* nil)
 
-(define-problem (2019 13) (data read-numbers) (255)
+(define-problem (2019 13) (data read-numbers) (255 12338)
   (setf *data* data)
-  (values (count 'block (hash-table-values (run-game data)))
+  (values (count 'block (alexandria:hash-table-values (run-game data)))
           (play-automatically data)))
 
 

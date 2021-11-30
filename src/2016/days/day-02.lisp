@@ -1,4 +1,4 @@
-(defpackage :advent/2016/02 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/02)
 (in-package :advent/2016/02)
 
 (defparameter *pad* 1)

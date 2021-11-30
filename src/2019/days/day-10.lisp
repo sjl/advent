@@ -1,5 +1,32 @@
-(defpackage :advent/2019/10 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2019/10)
 (in-package :advent/2019/10)
+
+
+
+(defun equivalence-classes (equiv seq) ; From quickutil TODO replace this 
+  "Partition the sequence `seq` into a list of equivalence classes
+defined by the equivalence relation `equiv`."
+  (let ((classes nil))
+    (labels ((find-equivalence-class (x)
+               (member-if (lambda (class)
+                            (funcall equiv x (car class)))
+                          classes))
+
+             (add-to-class (x)
+               (let ((class (find-equivalence-class x)))
+                 (if class
+                   (push x (car class))
+                   (push (list x) classes)))))
+      (declare (dynamic-extent (function find-equivalence-class)
+                               (function add-to-class))
+               (inline find-equivalence-class
+                       add-to-class))
+
+      ;; Partition into equivalence classes.
+      (map nil #'add-to-class seq)
+
+      ;; Return the classes.
+      classes)))
 
 (defun asteroid-positions (map)
   "Return a list of the asteroid positions in the 2D input `map`."

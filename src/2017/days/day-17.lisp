@@ -1,4 +1,4 @@
-(defpackage :advent/2017/17 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2017/17)
 (in-package :advent/2017/17)
 
 (defun-inline spin (ring shift n)
@@ -8,9 +8,9 @@
   ring)
 
 (defun simple-part-2 (shift)
-  (-<> (ring 0)
-    (spin <> shift 50000000)
-    (ring-find <> 0)
+  (_ (ring 0)
+    (spin _ shift 50000000)
+    (ring-find _ 0)
     ring-next
     ring-data))
 
@@ -33,8 +33,8 @@
 
 (define-problem (2017 17) (data read) (1244 11162912)
   (values
-    (-<> (ring 0)
-      (spin <> data 2017)
+    (_ (ring 0)
+      (spin _ data 2017)
       ring-next
       ring-data)
     (fast-part-2 data)))

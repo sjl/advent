@@ -1,4 +1,4 @@
-(defpackage :advent/2016/07 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2016/07)
 (in-package :advent/2016/07)
 
 (defun read-word (stream)
@@ -48,7 +48,7 @@
     (for aba :in (mapcan #'find-babs supers))
     (finding t :such-that (tree-find-if (curry #'str:containsp aba) hypers))))
 
-(define-problem (2016 7) (data read-lines) (115)
+(define-problem (2016 7) (data read-lines) (115 231)
   (values
     (count-if #'tlsp data :key #'parse-address)
     (count-if #'sslp data :key #'parse-address)))

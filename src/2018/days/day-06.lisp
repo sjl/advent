@@ -1,4 +1,4 @@
-(defpackage :advent/2018/06 #.cl-user::*advent-use*)
+(advent:defpackage* :advent/2018/06)
 (in-package :advent/2018/06)
 (named-readtables:in-readtable :interpol-syntax)
 
@@ -16,10 +16,10 @@
   (let* ((coordinates (mapcar #'parse-line data))
          (xs (mapcar #'realpart coordinates))
          (ys (mapcar #'imagpart coordinates))
-         (left (extremum xs #'<))
-         (bottom (extremum ys #'<))
-         (right (extremum xs #'>))
-         (top (extremum ys #'>))
+         (left (alexandria:extremum xs #'<))
+         (bottom (alexandria:extremum ys #'<))
+         (right (alexandria:extremum xs #'>))
+         (top (alexandria:extremum ys #'>))
          (counts (make-hash-table))
          (infinite (make-hash-set)))
     (iterate

@@ -1,6 +1,23 @@
-(advent:defpackage* :advent/2016/09)
-(in-package :advent/2016/09)
+(advent:defpackage* :advent/2016/10)
+(in-package :advent/2016/10)
 
+(defun tree-collect (predicate tree) ; todo from quickutil, remove this
+  "Returns a list of every node in the `tree` that satisfies the `predicate`. If there are any improper lists in the tree, the `predicate` is also applied to their dotted elements."
+  (let ((sentinel (gensym)))
+    (flet ((my-cdr (obj)
+             (cond ((consp obj)
+                    (let ((result (cdr obj)))
+                      (if (listp result)
+                        result
+                        (list result sentinel))))
+                   (t
+                    (list sentinel)))))
+      (loop :for (item . rest) :on tree :by #'my-cdr
+            :until (eq item sentinel)
+            :if (funcall predicate item) collect item
+            :else
+            :if (listp item)
+            :append (tree-collect predicate item)))))
 
 (defun parse-line (line)
   (or (ppcre:register-groups-bind
@@ -20,7 +37,7 @@
                 (tree-collect (lambda (node)
                                 (and (consp node) (eql (car node) type)))
                               _)
-                (extremum _ #'> :key #'cdr)
+                (alexandria:extremum _ #'> :key #'cdr)
                 (1+ (cdr _)))
     :initial-element nil))
 
