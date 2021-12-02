@@ -5,13 +5,9 @@
   (when (array-in-bounds-p seats row col)
     (aref seats row col)))
 
-(defun count-neighbors (seats row col &aux (result 0))
-  (do-irange ((dr -1 1)
-              (dc -1 1))
-    (unless (= 0 dr dc)
-      (when (eql #\# (sref seats (+ row dr) (+ col dc)))
-        (incf result))))
-  result)
+(defun count-neighbors (seats row col)
+  (iterate (for (r c) :within-radius 1 :origin (row col) :skip-origin t)
+           (counting (eql #\# (sref seats r c)))))
 
 (defun count-visible (seats row col &aux (result 0))
   (do-irange ((dr -1 1)
