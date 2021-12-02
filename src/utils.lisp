@@ -844,6 +844,14 @@
   (esc "[0m"))
 
 
+(defun print-2d-array (array)
+  (destructuring-bind (rows cols) (array-dimensions array)
+    (dotimes (r rows)
+      (dotimes (c cols)
+        (princ (aref array r c)))
+      (terpri))))
+
+
 ;;;; A* Search ----------------------------------------------------------------
 (defstruct path
   state

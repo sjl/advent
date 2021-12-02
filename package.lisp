@@ -85,6 +85,7 @@
     :bisect-integers-right
 
     :print-hash-table-map
+    :print-2d-array
 
     :clear
     :green
