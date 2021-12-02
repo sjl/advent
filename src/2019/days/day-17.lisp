@@ -64,9 +64,9 @@
                    ((intersectionp world pos) #\O)))))
 
 (define-problem (2019 17) (data read-numbers) (7328)
-  (advent/intcode::disassemble-program (advent/intcode:init data))
+  ;; (advent/intcode::disassemble-program (advent/intcode:init data))
   (let ((world (parse-map (record-string data))))
-    (draw-world world)
+    ;; (draw-world world)
     (summation (intersections world) :key #'alignment-parameter)))
 
 #; Scratch --------------------------------------------------------------------

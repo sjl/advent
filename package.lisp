@@ -14,6 +14,7 @@
     :read-before
     :read-to
     :read-digits
+    :read-chunks
 
     :ensure-string
     :ensure-stream
@@ -88,6 +89,8 @@
     :clear
     :green
     :reset
+
+    :mkinput
 
     ))
 

@@ -1,17 +1,11 @@
 (in-package :advent)
 
-;;;; Clipboard ----------------------------------------------------------------
-(defun sh (command &key (input "") output)
-  (uiop:run-program command
-                    :output (when output :string)
-                    :input (make-string-input-stream input)))
-
-(defun pbcopy (object)
-  (sh '("pbcopy") :input (aesthetic-string object))
-  (values))
-
-(defun pbpaste ()
-  (values (sh '("pbpaste") :output t)))
+;;;; Input ----------------------------------------------------------------
+(defun mkinput (year day)
+  (alexandria:write-string-into-file
+    (losh:pbpaste)
+    (format nil "data/~D/~2,'0D.txt" year day)
+    :if-exists :supersede))
 
 
 ;;;; Streams ------------------------------------------------------------------
@@ -182,6 +176,17 @@
            (for digit = (digit-char-p char))
            (when digit
              (collect digit))))
+
+(defun read-chunks (stream)
+  "Read double-newline separated lines into a list of lists of lines."
+  (iterate (with current = (list))
+           (for line = (read-line stream nil :eof))
+           (if (or (eql :eof line) (string= "" line))
+               (progn
+                 (collect current)
+                 (setf current (list)))
+               (push line current))
+           (until (eql :eof line))))
 
 
 ;;;; Rings --------------------------------------------------------------------
@@ -426,6 +431,7 @@
         (+ point #c(1 0))
         (+ point #c(0 -1))
         (+ point #c(-1 0))))
+
 
 
 (defgeneric emptyp (collection)

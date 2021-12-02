@@ -52,4 +52,8 @@
                               :components ((:auto-module "days")))
                              (:module "2019" :serial t
                               :components ((:file "intcode")
-                                           (:auto-module "days")))))))
+                                           (:auto-module "days")))
+                             (:module "2020" :serial t
+                              :components ((:auto-module "days")))
+                             (:module "2021" :serial t
+                              :components ((:auto-module "days")))))))
