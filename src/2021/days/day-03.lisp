@@ -1,8 +1,8 @@
 (advent:defpackage* :advent/2021/03)
 (in-package :advent/2021/03)
 
-(defun bool->bit (b) (if b 1 0))
-(defun char->δ (ch) (ecase ch (#\0 -1) (#\1 1)))
+(defun-inline bool->bit (b) (if b 1 0))
+(defun-inline char->δ (ch) (ecase ch (#\0 -1) (#\1 1)))
 
 (defun count-bits (data)
   (iterate
@@ -23,7 +23,7 @@
     (with lo = 0)
     (with hi = (1- (length sorted-data)))
     (when (= lo hi)
-      (return (digits->number (aref sorted-data lo) :radix 2 :key #'digit-char-p)))
+      (return (parse-integer (aref sorted-data lo) :radix 2)))
     (for i :from 0)
     (for count = (iterate (for candidate :in-vector sorted-data :from lo :to hi)
                           (summing (char->δ (aref candidate i)))))
