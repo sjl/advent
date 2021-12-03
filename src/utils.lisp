@@ -542,20 +542,22 @@
               (nreverse result))
             result-type)))
 
-(defun digits-to-number (digits &key from-end (radix 10))
+(defun digits->number (digits &key from-end (radix 10) key)
   "Concatenate `digits` to return an integer in base `radix`.
 
   If `from-end` is `t`, start at the end of the list.
 
+  If `key` is given, call it on the digits first.
+
   "
-  (if digits
+  (if (not (emptyp digits))
     (if from-end
-      (iterate (for d :in digits)
+      (iterate (for digit :in digits)
                (for multiplier :first 1 :then (* radix multiplier))
-               (summing (* multiplier d)))
+               (summing (* multiplier (if key (funcall key digit) digit))))
       (reduce (lambda (total digit)
-                (+ (* total radix) digit))
-              digits))
+                (+ (* total radix) (if key (funcall key digit) digit)))
+              digits :initial-value 0))
     0))
 
 

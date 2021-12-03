@@ -39,7 +39,7 @@
     :positions
     :positions-if
     :digits
-    :digits-to-number
+    :digits->number
     :fresh-vector
     :first-character
     :let-result
