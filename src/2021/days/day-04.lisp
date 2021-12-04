@@ -1,13 +1,15 @@
 (advent:defpackage* :advent/2021/04)
 (in-package :advent/2021/04)
 
-
+;; Cells ----------------------------------------------------------------------
 (defun cell (num) (cons num nil))
 (defun num (cell) (car cell))
 (defun markedp (cell) (cdr cell))
 (defun unmarkedp (cell) (not (markedp cell)))
 (defun mark (cell) (setf (cdr cell) t))
 
+
+;; Input ----------------------------------------------------------------------
 (defun read-bingo-numbers (stream)
   (read-numbers-from-string (read-line stream)))
 
@@ -21,6 +23,8 @@
   (values (read-bingo-numbers stream)
           (read-and-collect stream #'read-board)))
 
+
+;; Boards ---------------------------------------------------------------------
 (defun copy-board (board)
   (do-array (cell (alexandria:copy-array board))
     (setf cell (cons (car cell) (cdr cell)))))
@@ -31,13 +35,14 @@
                                    (format t "~3D" (num cell))
                                    (when (markedp cell) (reset)))))
 
-
 (defun print-boards (boards &optional heading)
   (when heading (write-line heading))
   (dolist (board boards)
     (print-board board)
     (terpri)))
 
+
+;; Playing --------------------------------------------------------------------
 (defun mark-number-on-board (n board)
   (do-array (cell board)
     (when (= n (num cell))
@@ -84,17 +89,12 @@
 (defun score (last-number board)
   (* last-number (unmarked-sum board)))
 
+;; Main -----------------------------------------------------------------------
 (define-problem (2021 4) (data) (49860 24628)
   (multiple-value-bind (numbers boards) (parse data)
     (values
       (multiple-value-call #'score (play-first numbers boards))
       (multiple-value-call #'score (play-last numbers boards)))))
-
-
-
-
-
-
 
 
 #; Scratch --------------------------------------------------------------------
