@@ -73,6 +73,10 @@
 
 
 ;;;; Readers ------------------------------------------------------------------
+(alexandria:define-constant +whitespace-chars+
+  '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout)
+  :test #'equal)
+
 (defun read-numbers-from-string (line)
   (mapcar #'parse-integer (ppcre:all-matches-as-strings "-?\\d+" line)))
 
@@ -80,6 +84,14 @@
   (iterate (for value :in-stream stream :using reader)
            (collect value)))
 
+
+(defmacro with-eof-handled ((stream eof-error-p eof-value) &body body)
+  (once-only (stream eof-error-p eof-value)
+    `(if (null (peek-char nil ,stream nil))
+       (if ,eof-error-p
+         (error 'end-of-file)
+         ,eof-value)
+       (progn ,@body))))
 
 (defun read-before (char &optional (discard-delimiter t) (stream *standard-input*) (eof-error-p t) eof-value)
   "Read characters from `stream` up to, but *not* including, `char`.
@@ -94,10 +106,7 @@
   invocation).
 
   "
-  (if (null (peek-char nil stream nil))
-    (if eof-error-p
-      (error 'end-of-file)
-      eof-value)
+  (with-eof-handled (stream eof-error-p eof-value) 
     (iterate
       (for c = (peek-char nil stream nil))
       (until (null c))
@@ -117,15 +126,26 @@
   invocation).
 
   "
-  (if (null (peek-char nil stream nil))
-    (if eof-error-p
-      (error 'end-of-file)
-      eof-value)
+  (with-eof-handled (stream eof-error-p eof-value)
     (iterate
       (for c = (peek-char nil stream nil))
       (until (null c))
       (collect (read-char stream) :result-type 'string)
       (until (char= char c)))))
+
+(defun read-word (&optional (stream *standard-input*) (eof-error-p t) eof-value)
+  "Read the next word from `stream` and return it as a string.
+
+  A word is a sequence of non-whitespace characters.  Leading whitespace will be
+  skipped.
+
+  "
+  (peek-char t stream nil)
+  (with-eof-handled (stream eof-error-p eof-value)
+    (iterate
+      (for c = (read-char stream nil #\space))
+      (until (member c +whitespace-chars+))
+      (collect c :result-type 'string))))
 
 
 (defun read-all (stream)
@@ -138,6 +158,7 @@
 (defun read-lines (stream)
   "Read all lines from `stream` and return them as a fresh list of strings."
   (read-and-collect stream #'read-line))
+
 
 (defun read-lines-of-numbers-and-garbage (stream)
   "Read the lines of numbers in `stream` into a list of lists of numbers.
@@ -839,18 +860,17 @@
   (esc "[2J")
   (esc "[;H"))
 
-(defun green ()
-  (esc "[32m"))
+(defun green () (esc "[32m"))
+(defun bold () (esc "[1m"))
+(defun underline () (esc "[4m"))
+(defun reset () (esc "[0m"))
 
-(defun reset ()
-  (esc "[0m"))
 
-
-(defun print-2d-array (array)
+(defun print-2d-array (array &key (printer #'princ) (key #'identity))
   (destructuring-bind (rows cols) (array-dimensions array)
     (dotimes (r rows)
       (dotimes (c cols)
-        (princ (aref array r c)))
+        (funcall printer (funcall key (aref array r c))))
       (terpri))))
 
 

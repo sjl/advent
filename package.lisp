@@ -3,18 +3,21 @@
   (:export
     :define-problem
 
+    :read-2d-array
     :read-all
+    :read-and-collect
+    :read-before
+    :read-chunks
+    :read-comma-separated-values
+    :read-digits
     :read-lines
-    :read-lines-of-words
     :read-lines-of-numbers-and-garbage
+    :read-lines-of-words
     :read-numbers
     :read-numbers-from-string
-    :read-comma-separated-values
-    :read-2d-array
-    :read-before
     :read-to
-    :read-digits
-    :read-chunks
+    :read-word
+    :with-eof-handled
 
     :ensure-string
     :ensure-stream
@@ -87,9 +90,11 @@
     :print-hash-table-map
     :print-2d-array
 
+    :bold
     :clear
     :green
     :reset
+    :underline
 
     :mkinput
 

@@ -2,6 +2,7 @@
 (in-package :advent/2021/03)
 
 (defun-inline bool->bit (b) (if b 1 0))
+
 (defun-inline char->δ (ch) (ecase ch (#\0 -1) (#\1 1)))
 
 (defun count-bits (data)
