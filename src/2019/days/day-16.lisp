@@ -60,7 +60,7 @@
   (let* ((digits (coerce (iterate (repeat 10000)
                                   (appending digits))
                          'vector))
-         (offset (digits-to-number (subseq digits 0 7)))
+         (offset (digits->number (subseq digits 0 7)))
          (data (subseq digits offset)))
     (do-repeat 100
       (iterate

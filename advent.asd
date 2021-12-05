@@ -33,6 +33,7 @@
                :md5
                :named-readtables
                :pileup
+               :safe-read
                :split-sequence
                :str
 
