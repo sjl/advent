@@ -33,16 +33,15 @@
                :md5
                :named-readtables
                :pileup
-               :safe-read
                :split-sequence
                :str
 
                )
 
   :serial t
-  :components ((:file "package")
-               (:module "src" :serial t
-                :components ((:file "utils")
+  :components ((:module "src" :serial t
+                :components ((:file "package")
+                             (:file "utils")
                              (:module "2016" :serial t
                               :components ((:auto-module "days")))
                              (:module "2017" :serial t
