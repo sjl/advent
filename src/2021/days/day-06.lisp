@@ -14,13 +14,14 @@
             :for n = (aref curr i)
             :do (if (zerop i)
                   (progn (setf (aref next 8) n)
-                         ;; downto is important to make sure 6 is already by now
+                         ;; downto is important to make sure 6 is already set
                          (incf (aref next 6) n))
                   (setf (aref next (1- i)) n)))
       (rotatef curr next))
     curr))
 
-(define-problem (2021 6) (data parse) (371379 1674303997472)
+(define-problem (2021 6) (data read-comma-separated-integers)
+    (371379 1674303997472)
   (values
     (summation (simulate data 80))
     (summation (simulate data 256))))

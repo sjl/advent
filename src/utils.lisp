@@ -180,6 +180,9 @@
 (defun read-comma-separated-values (stream)
   (str:split #\, (alexandria:read-stream-content-into-string stream)))
 
+(defun read-comma-separated-integers (stream)
+  (mapcar #'parse-integer (read-comma-separated-values stream)))
+
 (defun read-2d-array (stream)
   (iterate
     (with lines = (read-lines stream))

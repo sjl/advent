@@ -9,6 +9,7 @@
     :read-before
     :read-chunks
     :read-comma-separated-values
+    :read-comma-separated-integers
     :read-digits
     :read-lines
     :read-lines-of-numbers-and-garbage
