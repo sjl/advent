@@ -183,7 +183,7 @@
 (defun read-comma-separated-integers (stream)
   (mapcar #'parse-integer (read-comma-separated-values stream)))
 
-(defun read-2d-array (stream)
+(defun read-2d-array (stream &key key)
   (iterate
     (with lines = (read-lines stream))
     (with result = (make-array (list (length lines) (length (first lines)))))
@@ -192,7 +192,7 @@
     (iterate
       (for col :from 0)
       (for char :in-string line)
-      (setf (aref result row col) char))
+      (setf (aref result row col) (if key (funcall key char) char)))
     (returning result)))
 
 (defun read-digits (stream)
