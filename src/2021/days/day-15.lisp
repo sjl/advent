@@ -2,23 +2,24 @@
 (in-package :advent/2021/15)
 
 
-(defun-inline coord (row col)
-  (cons row col))
+(defun-inline coord (row col) (cons row col))
+(defun-inline row (coord) (car coord))
+(defun-inline col (coord) (cdr coord))
 
 (defun-inline coord= (a b)
-  (and (= (car a) (car b))
-       (= (cdr a) (cdr b))))
+  (and (= (row a) (row b))
+       (= (col a) (col b))))
 
 (defun-inline cref (array coord)
-  (aref array (car coord) (cdr coord)))
+  (aref array (row coord) (col coord)))
 
 (defun-inline (setf cref) (value array coord)
-  (setf (aref array (car coord) (cdr coord)) value))
+  (setf (aref array (row coord) (col coord)) value))
 
 (defun-inline neighbors (array coord)
   (loop :for δ in '((-1 . 0) (1 . 0) (0 . -1) (0 . 1))
-        :for r = (+ (car coord) (car δ))
-        :for c = (+ (cdr coord) (cdr δ))
+        :for r = (+ (row coord) (row δ))
+        :for c = (+ (col coord) (col δ))
         :when (array-in-bounds-p array r c)
         :collect (coord r c)))
 
