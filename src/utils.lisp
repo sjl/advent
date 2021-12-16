@@ -891,7 +891,7 @@
       (recur (path-previous path))))
   result)
 
-(defun astar (&key start neighbors goalp cost heuristic test limit)
+(defun-inlineable astar (&key start neighbors goalp cost heuristic test limit)
   "Search for a path from `start` to a goal using A★.
 
   The following parameters are all required:
