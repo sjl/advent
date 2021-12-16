@@ -17,7 +17,7 @@
   (cref data to))
 
 (defun find-path (data)
-  (declare (inline astar curry)
+  (declare (inline dijkstra curry)
            (optimize (speed 3) (debug 1) (safety 1)))
   (let ((goal (complex (1- (array-dimension data 0))
                        (1- (array-dimension data 1)))))
@@ -25,8 +25,11 @@
            :neighbors (curry #'neighbors data)
            :goalp (curry #'= goal)
            :cost (curry #'cost data)
-           :heuristic (curry #'manhattan-distance goal)
-           :test #'eql)))
+           :test #'eql
+           ;; Manhattan distance is the only candidate for a heuristic, but for
+           ;; this problem it's not particularly helpful and slows things down.
+           ;; Just use a constant and degrade to Dijkstra.
+           :heuristic (constantly 0))))
 
 (defun path-cost (data path)
   (reduce #'+ (rest path) :key (curry #'cref data)))

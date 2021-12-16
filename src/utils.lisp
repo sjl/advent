@@ -913,7 +913,8 @@
     passing to `make-hash-table`.
 
   If the heuristic function is admissable (i.e. it never overestimates the
-  remaining distance) the algorithm will find the shortest path.
+  remaining distance) the algorithm will find the shortest path.  If you don't
+  have a decent heuristic, just use `(constantly 0)` to degrade to Dijkstra.
 
   Note that `test` is required.  The only sensible default would be `eql`, but
   if you were using states that need a different predicate and forgot to pass it
