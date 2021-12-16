@@ -891,7 +891,8 @@
       (recur (path-previous path))))
   result)
 
-(defun-inlineable astar (&key start neighbors goalp cost heuristic test limit)
+(defun-inlineable astar (&key start neighbors goalp cost heuristic test limit
+                              get-seen set-seen)
   "Search for a path from `start` to a goal using A★.
 
   The following parameters are all required:
@@ -925,13 +926,26 @@
   * `limit`: a maximum cost.  Any paths that exceed this cost will not be
     considered.
 
+  * `set-seen`: a function that takes a state and a cost, and records it.
+    If not provided a hash table will be used, but sometimes (depending on what
+    your states are) it can be faster to store visited nodes more efficiently.
+
+  * `get-seen`: a function that takes a state and retrieves the stored cost, or
+    `nil` if the state has not been seen.
+
   "
-  (let ((seen (make-hash-table :test test))
+  (let ((seen (unless get-seen (make-hash-table :test test)))
         (frontier (pileup:make-heap #'< :key #'path-estimate)))
-    (labels ((mark-seen (path)
-               (setf (gethash (path-state path) seen) (path-cost path)))
+    (labels ((set-seen% (path)
+               (if set-seen
+                 (funcall set-seen (path-state path) (path-cost path))
+                 (setf (gethash (path-state path) seen) (path-cost path))))
+             (get-seen% (state)
+               (if get-seen
+                 (funcall get-seen state)
+                 (gethash state seen)))
              (push-path (path)
-               (mark-seen path)
+               (set-seen% path)
                (pileup:heap-insert path frontier)))
       (iterate
         (initially (push-path (make-path :state start)))
@@ -950,10 +964,9 @@
         (iterate
           (for next-state :in (funcall neighbors current-state))
           (for next-cost = (+ current-cost (funcall cost current-state next-state)))
-          (for (values seen-cost previously-seen) = (gethash next-state seen))
+          (for seen-cost = (get-seen% next-state))
           (unless (and limit (> next-cost limit))
-            (when (or (not previously-seen)
-                      (< next-cost seen-cost))
+            (when (or (null seen-cost) (< next-cost seen-cost))
               (for next-estimate = (+ next-cost (funcall heuristic next-state)))
               (push-path (make-path :state next-state
                                     :cost next-cost

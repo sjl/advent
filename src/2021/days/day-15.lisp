@@ -1,31 +1,39 @@
 (advent:defpackage* :advent/2021/15)
 (in-package :advent/2021/15)
 
-(defun-inline cref (array coord)
-  (aref array (realpart coord) (imagpart coord)))
 
-(defun-inline validp (array coord)
-  (array-in-bounds-p array (realpart coord) (imagpart coord)))
+(defun-inline coord (row col)
+  (cons row col))
+
+(defun-inline coord= (a b)
+  (and (= (car a) (car b))
+       (= (cdr a) (cdr b))))
+
+(defun-inline cref (array coord)
+  (aref array (car coord) (cdr coord)))
+
+(defun-inline (setf cref) (value array coord)
+  (setf (aref array (car coord) (cdr coord)) value))
 
 (defun-inline neighbors (array coord)
-  (loop :for δ in '(#c(-1 0) #c(1 0) #c(0 -1) #c(0 1))
-        :for n = (+ coord δ)
-        :when (validp array n) :collect n))
-
-(defun cost (data from to)
-  (declare (ignore from))
-  (cref data to))
+  (loop :for δ in '((-1 . 0) (1 . 0) (0 . -1) (0 . 1))
+        :for r = (+ (car coord) (car δ))
+        :for c = (+ (cdr coord) (cdr δ))
+        :when (array-in-bounds-p array r c)
+        :collect (coord r c)))
 
 (defun find-path (data)
-  (declare (inline dijkstra curry)
-           (optimize (speed 3) (debug 1) (safety 1)))
-  (let ((goal (complex (1- (array-dimension data 0))
-                       (1- (array-dimension data 1)))))
-    (astar :start #c(0 0)
-           :neighbors (curry #'neighbors data)
-           :goalp (curry #'= goal)
-           :cost (curry #'cost data)
-           :test #'eql
+  (declare (inline astar) (optimize (speed 3) (debug 1) (safety 1)))
+  (let ((seen (make-array (array-dimensions data) :initial-element nil))
+        (goal (coord (1- (array-dimension data 0))
+                     (1- (array-dimension data 1)))))
+    (astar :test #'equal
+           :start (coord 0 0)
+           :neighbors (lambda (state) (neighbors data state))
+           :goalp (lambda (state) (coord= goal state))
+           :cost (lambda (from to) (declare (ignore from)) (cref data to))
+           :get-seen (lambda (state) (cref seen state))
+           :set-seen (lambda (state cost) (setf (cref seen state) cost))
            ;; Manhattan distance is the only candidate for a heuristic, but for
            ;; this problem it's not particularly helpful and slows things down.
            ;; Just use a constant and degrade to Dijkstra.
