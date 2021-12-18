@@ -11,9 +11,6 @@
   (ymin 0 :type fixnum)
   (ymax 0 :type fixnum))
 
-(defun-inline pzerop (p) (and (zerop (x p)) (zerop (y p))))
-(defun-inline p->complex (p) (complex (x p) (y p)))
-(defun-inline p->char (p) (if (pzerop p) #\S #\#))
 (defun-inline in-box-p (p box)
   (and (<= (xmin box) (x p) (xmax box))
        (<= (ymin box) (y p) (ymax box))))
@@ -24,7 +21,7 @@
   (decf (x vel) (signum (x vel)))
   (decf (y vel)))
 
-(defun simulate (vel target)
+(defun-inline simulate (vel target)
   (iterate (with v = (copy-p vel))
            (with p = (p 0 0))
            (step! p v)
@@ -35,6 +32,8 @@
              (return height))))
 
 (defun solve (target)
+  ;; Could allocate one single velocity struct here and reuse it everywhere to
+  ;; reduce consing, but it's already fast enough, so whatever.
   (iterate (for vx :from 0 :to (xmax target))
            (do-irange ((vy (ymin target) (- (ymin target))))
              (for height = (simulate (p vx vy) target))
@@ -48,7 +47,7 @@
       ("target area: x=(-?\\d+)\\.\\.(-?\\d+), y=(-?\\d+)\\.\\.(-?\\d+)" line)
     (box xmin xmax ymin ymax)))
 
-(define-problem (2021 17) (target parse) ()
+(define-problem (2021 17) (target parse) (8646 5945)
   (solve target))
 
 #; Scratch --------------------------------------------------------------------
