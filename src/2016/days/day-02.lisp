@@ -48,7 +48,7 @@
     (setf pos next)
     (collect button :result-type 'string)))
 
-(define-problem (2016 2) (data read-lines) ("95549" "D87AD")
+(define-problem (2016 2) (data read-lines) ("12578" "516DD")
   (values (let ((*pad* 1)) (find-code data))
           (let ((*pad* 2)) (find-code data))))
 

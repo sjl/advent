@@ -44,7 +44,7 @@
           (t (write-char (read-char stream))))))))
 
 (define-problem (2016 9) (data alexandria:read-stream-content-into-string)
-    (97714 10762972461)
+    (102239 10780403063)
   (values (length (decompress (make-string-input-stream data)))
           (score (parse (make-string-input-stream data)))))
 

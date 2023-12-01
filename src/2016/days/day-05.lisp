@@ -17,7 +17,7 @@
        (zerop (aref hash 1))
        (zerop (ldb (byte 4 4) (aref hash 2)))))
 
-(define-problem (2016 5) (data read-line) ("1a3099aa" "694190cd")
+(define-problem (2016 5) (data read-line) ("2414bc77" "437e60fc")
   ;; This is ugly for performance.  A prettier version takes over a minute, but
   ;; this is around 20 seconds.
   (iterate

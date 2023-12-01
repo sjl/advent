@@ -76,7 +76,7 @@
           (setf (aref bots id) nil))))
     outputs))
 
-(define-problem (2016 10) (data read-lines) (157 1085)
+(define-problem (2016 10) (data read-lines) (93 47101)
   (let ((part1 nil))
     (handler-bind ((bot-comparison
                      (lambda (c)

@@ -6,7 +6,7 @@
   (when (> b c) (rotatef b c))
   (< c (+ a b)))
 
-(define-problem (2016 3) (data read-lines-of-numbers-and-garbage) (1050 1921)
+(define-problem (2016 3) (data read-lines-of-numbers-and-garbage) (1032 1838)
   (values
     (iterate
       (for (a b c) :in data)

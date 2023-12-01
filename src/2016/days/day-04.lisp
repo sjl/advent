@@ -35,7 +35,7 @@
   (map 'string (lambda (c) (decrypt-char c id)) string))
 
 (define-problem (2016 4) (data alexandria:read-stream-content-into-string)
-    (158835 993)
+    (245102 324)
   (iterate
     (for (name (#'parse-integer id) checksum)
          :matching "([\\w-]+)-(\\d+)\\[(\\w+)\\]"

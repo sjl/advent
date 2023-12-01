@@ -48,7 +48,7 @@
     (for aba :in (mapcan #'find-babs supers))
     (finding t :such-that (tree-find-if (curry #'str:containsp aba) hypers))))
 
-(define-problem (2016 7) (data read-lines) (115 231)
+(define-problem (2016 7) (data read-lines) (110 242)
   (values
     (count-if #'tlsp data :key #'parse-address)
     (count-if #'sslp data :key #'parse-address)))

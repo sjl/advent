@@ -7,7 +7,7 @@
                (#\L #c(0 1))
                (#\R #c(0 -1)))))
 
-(define-problem (2016 1) (data read-line) (298 158)
+(define-problem (2016 1) (data read-line) (146 131)
   (iterate
     (with pos = #c(0 0))
     (with seen = (make-hash-set :initial-contents (list #c(0 0))))

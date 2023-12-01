@@ -56,4 +56,8 @@
                              (:module "2020" :serial t
                               :components ((:auto-module "days")))
                              (:module "2021" :serial t
+                              :components ((:auto-module "days")))
+                             (:module "2022" :serial t
+                              :components ((:auto-module "days")))
+                             (:module "2023" :serial t
                               :components ((:auto-module "days")))))))

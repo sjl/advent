@@ -45,7 +45,7 @@
                         (collect (cons (complex col row) x)))
                "out/2016-08.pbm"))
 
-(define-problem (2016 8) (data read-lines) (110)
+(define-problem (2016 8) (data read-lines) (128)
   (iterate
     (with screen = (make-screen))
     (for (function . args) :in (mapcar #'parse-line data))
@@ -58,3 +58,5 @@
 
 
 #; Scratch --------------------------------------------------------------------
+
+; convert out/2016-08.pbm out/2016-08.png
