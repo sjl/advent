@@ -2,10 +2,6 @@
 (in-package :advent/2022/05)
 
 
-;; Not really mentioned in the problem, but the maps come in sorted, i.e. the're
-;; in the correct order.  So we don't need to bohter making a hash table of
-;; {from: to: [...]} but can just process the maps in the order they're given.
-
 (defstruct (mapping (:constructor make-mapping%))
   src-start src-end dst-start)
 
@@ -33,6 +29,9 @@
   (parse-body (rest (str:lines string))))
 
 (defun parse (data)
+  ;; Not really mentioned in the problem, but the maps are given in the correct
+  ;; order.  So we don't need to bohter making a hash table of {from: to: [...]}
+  ;; but can just reduce over the maps in the order they're given.
   (destructuring-bind (seeds . maps) (str:split (format nil "~2%") data)
     (values (parse-seeds seeds)
             (mapcar #'parse-map maps))))
@@ -42,6 +41,16 @@
      (- n (mapping-src-start mapping))))
 
 (defun map-single-range (input ranges)
+  ;; Take a single input range and a list of mapping ranges and produce a new
+  ;; list of ranges:
+  ;;
+  ;;     Input:  [10-20]
+  ;;     Ranges: [12-14 -> 100-102]
+  ;;             [18-30 -> 200-212]
+  ;;     Result: [10-11], [100-102], [15-17], [200-202]
+  ;;
+  ;; Input should be a cons, ranges a sorted list of mapping structs. Note that
+  ;; both of these use lispy half-open intervals (unlike the example above).
   (iterate
     (with (start . end) = input)
     (with n = start)
@@ -64,24 +73,12 @@
                (setf n stop))))))
 
 (defun map-ranges (inputs ranges)
-  (iterate (for input :in inputs)
-           (appending (map-single-range input ranges))))
+  (alexandria:mappend (rcurry #'map-single-range ranges) inputs))
 
 (defun traverse (almanac seeds)
   (reduce #'map-ranges almanac :initial-value seeds))
 
-;; (defun map-number (n ranges)
-;;   (let ((r (bisect-right #'> ranges n :key #'mapping-src-start)))
-;;     (if (or (null r) (>= n (mapping-src-end r)))
-;;       n
-;;       (let ((i (- n (mapping-src-start r))))
-;;         (+ (mapping-dst-start r) i)))))
-
-;; (defun traverse (almanac seed)
-;;   (reduce #'map-number almanac :initial-value seed))
-
-
-(define-problem (2023 5) (data alexandria:read-stream-content-into-string) (324724204)
+(define-problem (2023 5) (data alexandria:read-stream-content-into-string) (324724204 104070862)
   (multiple-value-bind (seeds almanac) (parse data)
     (let ((part-1 (iterate (for seed :in seeds)
                            (collect (cons seed (1+ seed)))))
